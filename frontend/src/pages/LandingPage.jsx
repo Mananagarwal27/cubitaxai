@@ -2,6 +2,8 @@ import { ArrowRight, BrainCircuit, FileBadge2, SearchCheck } from "lucide-react"
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+import BrandLogo from "../components/common/BrandLogo";
+
 const features = [
   {
     title: "Smart RAG Search",
@@ -36,15 +38,7 @@ export default function LandingPage() {
       <section className="hero-surface overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 py-8 md:px-10">
           <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/12 text-lg font-bold text-white ring-1 ring-white/20">
-                C
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-white">CubitaxAI</p>
-                <p className="text-sm text-white/70">GenAI-based Tax & Compliance Software</p>
-              </div>
-            </div>
+            <BrandLogo light className="max-w-full" />
             <div className="flex items-center gap-3">
               <Link className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition hover:text-white" to="/login">
                 Login
@@ -164,14 +158,10 @@ export default function LandingPage() {
 
       <footer className="border-t border-slate-200 bg-white/80">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-8 text-sm text-slate-500 md:flex-row md:items-center md:justify-between md:px-10">
-          <div>
-            <p className="font-semibold text-brand-primary">CubitaxAI</p>
-            <p>GenAI-based Tax & Compliance Software</p>
-          </div>
+          <BrandLogo />
           <p>© 2025 CubitaxAI. All rights reserved.</p>
         </div>
       </footer>
     </div>
   );
 }
-

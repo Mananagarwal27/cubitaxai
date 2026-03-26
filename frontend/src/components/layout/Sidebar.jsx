@@ -1,6 +1,7 @@
 import { BarChart2, Calendar, Calculator, FileText, LayoutDashboard, LogOut, Receipt, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
+import BrandLogo from "../common/BrandLogo";
 import { useAuth } from "../../hooks/useAuth";
 
 const navItems = [
@@ -24,19 +25,7 @@ export default function Sidebar() {
     <aside className="z-20 w-full border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:fixed md:inset-y-0 md:w-60 md:border-b-0 md:border-r">
       <div className="flex h-full flex-col">
         <div className="mb-6 flex items-center justify-between md:block">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-primary text-lg font-bold text-white shadow-panel">
-                C
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-brand-primary">CubitaxAI</p>
-                <span className="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-brand-accent">
-                  AI
-                </span>
-              </div>
-            </div>
-          </div>
+          <BrandLogo className="max-w-full" showTagline={false} />
           <button
             type="button"
             onClick={logout}
@@ -92,4 +81,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

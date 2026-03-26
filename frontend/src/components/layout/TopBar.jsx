@@ -1,5 +1,6 @@
 import { Bell } from "lucide-react";
 
+import BrandLogo from "../common/BrandLogo";
 import { useAuth } from "../../hooks/useAuth";
 
 /**
@@ -16,9 +17,14 @@ export default function TopBar({ title, notificationCount = 0 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-white/70 bg-white/80 backdrop-blur">
       <div className="flex flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between md:px-8">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">CubitaxAI Workspace</p>
-          <h1 className="text-2xl font-bold text-brand-primary">{title}</h1>
+        <div className="flex items-center gap-4">
+          <div className="hidden xl:block">
+            <BrandLogo compact className="opacity-90" />
+          </div>
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">CubitaxAI Workspace</p>
+            <h1 className="text-2xl font-bold text-brand-primary">{title}</h1>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden text-right md:block">
@@ -50,4 +56,3 @@ export default function TopBar({ title, notificationCount = 0 }) {
     </header>
   );
 }
-
