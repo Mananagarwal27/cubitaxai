@@ -4,6 +4,11 @@ import { Link } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
 
+const DEMO_CREDENTIALS = {
+  email: "demo@example.com",
+  password: "Demo12345"
+};
+
 /**
  * Render the login form.
  * @returns {JSX.Element}
@@ -26,12 +31,39 @@ export default function LoginForm() {
     }
   }
 
+  function applyDemoCredentials() {
+    setValues((current) => ({
+      ...current,
+      email: DEMO_CREDENTIALS.email,
+      password: DEMO_CREDENTIALS.password
+    }));
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="rounded-2xl border border-violet-100 bg-violet-50/70 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-accent">Demo workspace</p>
+            <p className="mt-1 text-sm text-slate-600">
+              {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={applyDemoCredentials}
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-brand-primary transition hover:text-brand-accent"
+          >
+            Use demo
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
         <input
           type="email"
+          autoComplete="email"
           required
           value={values.email}
           onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
@@ -44,6 +76,7 @@ export default function LoginForm() {
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             required
             value={values.password}
             onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}

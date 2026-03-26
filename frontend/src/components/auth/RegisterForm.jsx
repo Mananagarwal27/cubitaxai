@@ -14,6 +14,19 @@ function getPasswordStrength(password) {
   return score;
 }
 
+function getStrengthLabel(score) {
+  if (score >= 4) {
+    return "Strong";
+  }
+  if (score >= 3) {
+    return "Good";
+  }
+  if (score >= 2) {
+    return "Moderate";
+  }
+  return "Weak";
+}
+
 /**
  * Render the registration form.
  * @returns {JSX.Element}
@@ -61,26 +74,29 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">Full name</label>
-        <input
-          required
-          value={values.full_name}
-          onChange={(event) => setValues((current) => ({ ...current, full_name: event.target.value }))}
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
-          placeholder="Ananya Sharma"
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
-        <input
-          type="email"
-          required
-          value={values.email}
-          onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
-          placeholder="you@company.com"
-        />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">Full name</label>
+          <input
+            required
+            value={values.full_name}
+            onChange={(event) => setValues((current) => ({ ...current, full_name: event.target.value }))}
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
+            placeholder="Ananya Sharma"
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={values.email}
+            onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
+            placeholder="you@company.com"
+          />
+        </div>
       </div>
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">Company name</label>
@@ -101,6 +117,7 @@ export default function RegisterForm() {
             className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
             placeholder="ABCDE1234F"
           />
+          <p className="mt-1 text-xs text-slate-400">Optional. Format: ABCDE1234F</p>
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">GSTIN</label>
@@ -110,6 +127,7 @@ export default function RegisterForm() {
             className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-violet-300 focus:bg-white"
             placeholder="29ABCDE1234F1Z5"
           />
+          <p className="mt-1 text-xs text-slate-400">Optional. 15 character alphanumeric GSTIN.</p>
         </div>
       </div>
       <div>
@@ -117,6 +135,7 @@ export default function RegisterForm() {
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
             required
             value={values.password}
             onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
@@ -131,13 +150,18 @@ export default function RegisterForm() {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        <div className="mt-2 flex gap-2">
-          {[1, 2, 3, 4].map((level) => (
-            <div
-              key={level}
-              className={`h-2 flex-1 rounded-full ${strength >= level ? "bg-brand-accent" : "bg-slate-200"}`}
-            />
-          ))}
+        <div className="mt-2 flex items-center gap-3">
+          <div className="flex flex-1 gap-2">
+            {[1, 2, 3, 4].map((level) => (
+              <div
+                key={level}
+                className={`h-2 flex-1 rounded-full ${strength >= level ? "bg-brand-accent" : "bg-slate-200"}`}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+            {getStrengthLabel(strength)}
+          </span>
         </div>
       </div>
       <div>
@@ -145,6 +169,7 @@ export default function RegisterForm() {
         <div className="relative">
           <input
             type={showConfirmPassword ? "text" : "password"}
+            autoComplete="new-password"
             required
             value={values.confirmPassword}
             onChange={(event) => setValues((current) => ({ ...current, confirmPassword: event.target.value }))}

@@ -16,11 +16,11 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-os.environ.setdefault("DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}")
-os.environ.setdefault("REDIS_URL", "redis://localhost:6399/0")
-os.environ.setdefault("SECRET_KEY", "test-secret-key-for-cubitaxai-1234567890")
-os.environ.setdefault("ALLOWED_ORIGINS", "http://localhost:3000")
-os.environ.setdefault("DEBUG", "false")
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
+os.environ["REDIS_URL"] = "redis://localhost:6399/0"
+os.environ["SECRET_KEY"] = "test-secret-key-for-cubitaxai-1234567890"
+os.environ["ALLOWED_ORIGINS"] = "http://localhost:3000"
+os.environ["DEBUG"] = "false"
 
 from app.database import Base, engine  # noqa: E402
 from app.main import create_app  # noqa: E402
