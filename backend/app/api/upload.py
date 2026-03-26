@@ -24,7 +24,7 @@ from app.tasks.celery_tasks import process_document
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024
+MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024
 
 
 async def _dispatch_ingestion(doc_id: str, user_id: str, file_path: str) -> None:
@@ -51,7 +51,7 @@ async def upload_document(
 
     file_bytes = await file.read()
     if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="PDF exceeds 50MB limit")
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="PDF exceeds 100MB limit")
 
     tmp_dir = Path(tempfile.gettempdir()) / "cubitaxai_uploads"
     tmp_dir.mkdir(parents=True, exist_ok=True)

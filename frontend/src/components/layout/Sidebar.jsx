@@ -20,12 +20,24 @@ const navItems = [
  */
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const initials =
+    user?.full_name
+      ?.split(" ")
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("") || "CU";
 
   return (
-    <aside className="z-20 w-full border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:fixed md:inset-y-0 md:w-60 md:border-b-0 md:border-r">
+    <aside className="z-20 w-full border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:fixed md:inset-y-0 md:w-64 md:border-b-0 md:border-r">
       <div className="flex h-full flex-col">
         <div className="mb-6 flex items-center justify-between md:block">
-          <BrandLogo className="max-w-full" showTagline={false} />
+          <div className="flex items-center gap-3">
+            <BrandLogo compact className="shrink-0" />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">CubitaxAI</p>
+              <p className="truncate text-lg font-semibold text-brand-primary">Compliance Workspace</p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={logout}
@@ -35,15 +47,18 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <div className="mb-6 rounded-3xl bg-slate-50 p-4">
+        <div className="mb-6 rounded-[28px] border border-slate-100 bg-slate-50/90 p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-white">
-              {user?.full_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") || "CU"}
+              {initials}
             </div>
             <div className="min-w-0">
               <p className="truncate font-semibold text-slate-900">{user?.full_name}</p>
               <p className="truncate text-sm text-slate-500">{user?.company_name}</p>
             </div>
+          </div>
+          <div className="mt-4 rounded-2xl bg-white px-3 py-2 text-xs text-slate-500">
+            Assistant memory and cited retrieval stay attached to this workspace session.
           </div>
         </div>
 

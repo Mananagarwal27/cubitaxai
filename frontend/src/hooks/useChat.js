@@ -16,6 +16,8 @@ function createSessionId() {
  * messages: Array,
  * isStreaming: boolean,
  * sessionId: string,
+ * lastInteractionAt: string | null,
+ * lastError: string,
  * sendMessage: (query: string) => Promise<void>,
  * clearHistory: () => Promise<void>
  * }}
@@ -23,6 +25,8 @@ function createSessionId() {
 export function useChat() {
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [lastInteractionAt, setLastInteractionAt] = useState(null);
+  const [lastError, setLastError] = useState("");
   const [sessionId] = useState(() => {
     const existing = sessionStorage.getItem("cubitax_chat_session");
     if (existing) {
@@ -38,6 +42,8 @@ export function useChat() {
     try {
       const response = await api.chat.getHistory(sessionId);
       setMessages(response.messages || []);
+      const latestMessage = response.messages?.[response.messages.length - 1];
+      setLastInteractionAt(latestMessage?.created_at || null);
     } catch (error) {
       setMessages([]);
     }
@@ -48,8 +54,14 @@ export function useChat() {
       return;
     }
 
-    const userMessage = { role: "user", content: query, citations: [] };
-    setMessages((current) => [...current, userMessage, { role: "assistant", content: "", citations: [] }]);
+    const createdAt = new Date().toISOString();
+    const userMessage = { role: "user", content: query, citations: [], created_at: createdAt };
+    setLastError("");
+    setMessages((current) => [
+      ...current,
+      userMessage,
+      { role: "assistant", content: "", citations: [], created_at: createdAt }
+    ]);
     setIsStreaming(true);
 
     await new Promise((resolve) => {
@@ -63,7 +75,7 @@ export function useChat() {
           draft += token;
           setMessages((current) => {
             const next = [...current];
-            next[next.length - 1] = { role: "assistant", content: draft, citations };
+            next[next.length - 1] = { role: "assistant", content: draft, citations, created_at: createdAt };
             return next;
           });
         },
@@ -71,7 +83,7 @@ export function useChat() {
           citations = [...citations, citation];
           setMessages((current) => {
             const next = [...current];
-            next[next.length - 1] = { role: "assistant", content: draft, citations };
+            next[next.length - 1] = { role: "assistant", content: draft, citations, created_at: createdAt };
             return next;
           });
         },
@@ -79,6 +91,7 @@ export function useChat() {
           streamRef.current?.close();
           streamRef.current = null;
           setIsStreaming(false);
+          setLastInteractionAt(new Date().toISOString());
           resolve();
         },
         async onError() {
@@ -91,13 +104,26 @@ export function useChat() {
               next[next.length - 1] = {
                 role: "assistant",
                 content: response.answer,
-                citations: response.citations || []
+                citations: response.citations || [],
+                created_at: createdAt,
+                query_type: response.query_type
               };
               return next;
             });
+            setLastInteractionAt(new Date().toISOString());
           } catch (error) {
+            setLastError("Assistant response unavailable");
             toast.error("Unable to get a response from CubitaxAI");
-            setMessages((current) => current.slice(0, -1));
+            setMessages((current) => {
+              const next = [...current];
+              next[next.length - 1] = {
+                role: "assistant",
+                content: "I could not complete the response. Please retry in a few seconds or narrow the question.",
+                citations: [],
+                created_at: createdAt
+              };
+              return next;
+            });
           } finally {
             setIsStreaming(false);
             resolve();
@@ -108,8 +134,12 @@ export function useChat() {
   }
 
   async function clearHistory() {
+    streamRef.current?.close();
+    streamRef.current = null;
     await api.chat.clearHistory(sessionId);
     setMessages([]);
+    setLastError("");
+    setLastInteractionAt(null);
   }
 
   useEffect(() => {
@@ -123,8 +153,9 @@ export function useChat() {
     messages,
     isStreaming,
     sessionId,
+    lastInteractionAt,
+    lastError,
     sendMessage,
     clearHistory
   };
 }
-
