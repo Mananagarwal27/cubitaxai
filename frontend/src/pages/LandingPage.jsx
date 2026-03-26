@@ -159,7 +159,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-200 bg-white/80">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-8 text-sm text-slate-500 md:flex-row md:items-center md:justify-between md:px-10">
           <BrandLogo />
-          <p>© 2025 CubitaxAI. All rights reserved.</p>
+          <p>© 2026 CubitaxAI. All rights reserved.</p>
         </div>
       </footer>
     </div>

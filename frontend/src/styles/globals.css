@@ -25,6 +25,16 @@ body {
   color: #0f172a;
 }
 
+::selection {
+  background: rgba(124, 58, 237, 0.32);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: rgba(124, 58, 237, 0.32);
+  color: #ffffff;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -49,4 +59,14 @@ body {
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+.hero-surface ::selection {
+  background: rgba(96, 165, 250, 0.45);
+  color: #ffffff;
+}
+
+.hero-surface ::-moz-selection {
+  background: rgba(96, 165, 250, 0.45);
+  color: #ffffff;
 }
