@@ -8,6 +8,20 @@ from typing import Sequence
 from app.config import settings
 
 
+def _has_real_api_key(value: str | None) -> bool:
+    """Return True only when an API key looks intentionally configured."""
+
+    if not value:
+        return False
+    normalized = value.strip().lower()
+    return normalized not in {
+        "",
+        "your_openai_key_here",
+        "your_pinecone_key_here",
+        "your_cohere_key_here",
+    }
+
+
 class EmbeddingService:
     """Provide real or deterministic fallback embeddings for retrieval."""
 
@@ -15,7 +29,7 @@ class EmbeddingService:
         """Initialize the embedding backend."""
 
         self._client = None
-        if settings.openai_api_key:
+        if _has_real_api_key(settings.openai_api_key):
             from langchain_openai import OpenAIEmbeddings
 
             self._client = OpenAIEmbeddings(

@@ -91,7 +91,7 @@ The frontend is a responsive React dashboard with authentication, deadline track
 1. Clone the repository.
 2. Copy `.env.example` to `.env` and fill in the required API keys.
 3. Run `docker compose up --build`.
-4. Run the seed script with `docker exec backend python scripts/seed_knowledge_base.py`.
+4. Run the seed script with `docker compose exec backend python scripts/seed_knowledge_base.py`.
 5. Open [http://localhost:3000](http://localhost:3000).
 
 ## API Docs
@@ -124,4 +124,3 @@ Swagger UI is exposed by the FastAPI backend at [http://localhost:8000/docs](htt
 ## License
 
 MIT
-

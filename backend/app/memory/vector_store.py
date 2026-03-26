@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.config import settings
-from app.services.embedder import EmbeddingService
+from app.services.embedder import EmbeddingService, _has_real_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +45,18 @@ class VectorStoreManager:
         self.embedding_service = EmbeddingService()
         self.pinecone = None
         self.index = None
-        self.cohere_client = cohere.Client(settings.cohere_api_key) if cohere and settings.cohere_api_key else None
+        self.cohere_client = (
+            cohere.Client(settings.cohere_api_key)
+            if cohere and _has_real_api_key(settings.cohere_api_key)
+            else None
+        )
         self._local_store: dict[str, list[dict[str, Any]]] = defaultdict(list)
         self._chroma_client = None
 
     async def initialize(self) -> None:
         """Establish vector database clients when credentials are configured."""
 
-        if settings.pinecone_api_key and Pinecone:
+        if _has_real_api_key(settings.pinecone_api_key) and Pinecone:
             try:
                 self.pinecone = Pinecone(api_key=settings.pinecone_api_key)
                 self.index = self.pinecone.Index(settings.pinecone_index)
@@ -153,9 +157,41 @@ class VectorStoreManager:
                             text=metadata.get("text", ""),
                             metadata=metadata,
                             score=score,
-                        )
+                )
             except Exception as exc:  # pragma: no cover - external service path
                 logger.warning("Pinecone query failed for namespace %s: %s", namespace, exc)
+
+        if self._chroma_client:
+            try:
+                collection = self._chroma_client.get_or_create_collection(namespace)
+                chroma_response = await asyncio.to_thread(
+                    collection.query,
+                    query_embeddings=[query_embedding],
+                    n_results=top_k,
+                    where=filter_dict,
+                    include=["documents", "metadatas", "distances"],
+                )
+                ids = chroma_response.get("ids", [[]])[0]
+                documents = chroma_response.get("documents", [[]])[0]
+                metadatas = chroma_response.get("metadatas", [[]])[0]
+                distances = chroma_response.get("distances", [[]])[0]
+
+                for chunk_id, text, metadata, distance in zip(ids, documents, metadatas, distances, strict=False):
+                    lexical_score = len(lexical_terms.intersection((text or "").lower().split()))
+                    similarity_score = max(0.0, 1.0 - float(distance or 0.0))
+                    score = similarity_score + lexical_score * 0.15
+                    current = combined_scores.get(chunk_id)
+                    if current:
+                        current.score = max(current.score, score)
+                    else:
+                        combined_scores[chunk_id] = SearchChunk(
+                            id=chunk_id,
+                            text=text or "",
+                            metadata=dict(metadata or {}),
+                            score=score,
+                        )
+            except Exception as exc:  # pragma: no cover - service-dependent
+                logger.warning("Chroma query failed for namespace %s: %s", namespace, exc)
 
         ordered = sorted(combined_scores.values(), key=lambda item: item.score, reverse=True)
         return ordered[:top_k]
@@ -210,6 +246,13 @@ class VectorStoreManager:
                 await asyncio.to_thread(self.index.delete, ids=deleted_ids, namespace=namespace)
             except Exception as exc:  # pragma: no cover
                 logger.warning("Pinecone delete failed for %s: %s", doc_id, exc)
+
+        if self._chroma_client and deleted_ids:
+            try:
+                collection = self._chroma_client.get_or_create_collection(namespace)
+                collection.delete(ids=deleted_ids)
+            except Exception as exc:  # pragma: no cover
+                logger.warning("Chroma delete failed for %s: %s", doc_id, exc)
 
     async def close(self) -> None:
         """Release any vector resources if needed."""

@@ -45,15 +45,18 @@ export default function RegisterForm() {
       toast.error("You must accept the terms to continue");
       return;
     }
-
-    await register({
-      full_name: values.full_name,
-      email: values.email,
-      company_name: values.company_name,
-      pan_number: values.pan_number || null,
-      gstin: values.gstin || null,
-      password: values.password
-    });
+    try {
+      await register({
+        full_name: values.full_name,
+        email: values.email,
+        company_name: values.company_name,
+        pan_number: values.pan_number || null,
+        gstin: values.gstin || null,
+        password: values.password
+      });
+    } catch (error) {
+      // AuthContext already surfaces the message via toast.
+    }
   }
 
   return (
@@ -182,4 +185,3 @@ export default function RegisterForm() {
     </form>
   );
 }
-

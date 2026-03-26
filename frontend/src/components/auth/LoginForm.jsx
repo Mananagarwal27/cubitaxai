@@ -19,7 +19,11 @@ export default function LoginForm() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    await login(values.email, values.password);
+    try {
+      await login(values.email, values.password);
+    } catch (error) {
+      // AuthContext already surfaces the message via toast.
+    }
   }
 
   return (
@@ -85,4 +89,3 @@ export default function LoginForm() {
     </form>
   );
 }
-
