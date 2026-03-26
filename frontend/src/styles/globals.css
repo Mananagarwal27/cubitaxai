@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1e1b4b;
+  --color-accent: #7c3aed;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-background: #f8fafc;
+  --color-card: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.08), transparent 28%),
+    linear-gradient(135deg, rgba(248, 250, 252, 1), rgba(241, 245, 249, 1));
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.page-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.14), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(30, 27, 75, 0.08), transparent 20%),
+    var(--color-background);
+}
+
+.hero-surface {
+  background-color: #1e1b4b;
+  background-image:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.24), transparent 35%),
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}

@@ -1,0 +1,22 @@
+services:
+  backend:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    environment:
+      DEBUG: "true"
+
+  celery:
+    command: celery -A app.tasks.celery_tasks.celery_app worker --loglevel=info --pool=solo
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    command: npm start
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WDS_SOCKET_PORT: "0"
+
