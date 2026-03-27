@@ -72,39 +72,39 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="surface-card p-6">
+          <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_48px_rgba(15,23,42,0.06)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Recent Activity</p>
-                <h2 className="mt-2 font-display text-3xl font-bold text-text-primary">What moved in the workspace</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Recent Activity</p>
+                <h2 className="mt-2 font-display text-3xl font-bold tracking-[-0.04em] text-[#171b4d]">What moved in the workspace</h2>
               </div>
             </div>
             <div className="mt-6 space-y-3">
               {activity.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.title} className="flex items-center justify-between gap-4 rounded-2xl border border-navy-border bg-navy px-4 py-4">
+                  <div key={item.title} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-2xl bg-white/[0.04] p-3 text-text-secondary">
+                      <div className="rounded-2xl bg-white p-3 text-slate-500 shadow-sm">
                         <Icon className="h-4 w-4" />
                       </div>
-                      <p className="text-sm text-text-primary">{item.title}</p>
+                      <p className="text-sm text-slate-700">{item.title}</p>
                     </div>
-                    <span className="text-xs font-medium text-text-muted">{item.time}</span>
+                    <span className="text-xs font-medium text-slate-400">{item.time}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="surface-card p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Upcoming Deadlines</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-text-primary">Keep ahead of due dates</h2>
+          <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_48px_rgba(15,23,42,0.06)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Upcoming Deadlines</p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-[-0.04em] text-[#171b4d]">Keep ahead of due dates</h2>
             <div className="mt-6 space-y-3">
               {deadlines.slice(0, 4).map((deadline) => (
-                <div key={`${deadline.filing_name}-${deadline.due_date}`} className="rounded-2xl border border-navy-border bg-navy px-4 py-4">
+                <div key={`${deadline.filing_name}-${deadline.due_date}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-text-primary">{deadline.filing_name}</p>
+                    <p className="font-semibold text-slate-900">{deadline.filing_name}</p>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         deadline.urgency === "RED"
@@ -117,7 +117,7 @@ export default function Dashboard() {
                       {deadline.status}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-text-secondary">
+                  <p className="mt-2 text-sm text-slate-500">
                     {new Date(deadline.due_date).toLocaleDateString("en-IN")} · {deadline.days_remaining} days left
                   </p>
                 </div>
@@ -126,15 +126,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="surface-card p-6">
+        <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_48px_rgba(15,23,42,0.06)]">
           <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-purple/15 p-3 text-purple-light">
+            <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
               <Bot className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Assistant Insight</p>
-              <h2 className="mt-2 font-display text-3xl font-bold text-text-primary">Section-linked signal from your workspace</h2>
-              <p className="mt-4 max-w-4xl text-base leading-8 text-text-secondary">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Assistant Insight</p>
+              <h2 className="mt-2 font-display text-3xl font-bold tracking-[-0.04em] text-[#171b4d]">Section-linked signal from your workspace</h2>
+              <p className="mt-4 max-w-4xl text-base leading-8 text-slate-500">
                 The current filing calendar shows GST obligations in the next cycle, while your workspace still lacks
                 uploaded GST returns. Add GSTR evidence first so assistant answers can cite both statutory provisions
                 and your actual filing pack.

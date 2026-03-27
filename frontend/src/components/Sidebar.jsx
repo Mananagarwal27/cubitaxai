@@ -33,22 +33,22 @@ function SidebarContent({ user, onLogout, onClose }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-navy-border px-5 py-5">
-        <BrandLogo light />
+      <div className="border-b border-slate-200 px-5 py-5">
+        <BrandLogo compact className="w-full" />
       </div>
 
       <div className="px-5 py-5">
-        <div className="surface-card p-4">
+        <div className="rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple/20 font-semibold text-purple-light">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 font-semibold text-violet-700">
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-text-primary">{user?.full_name || "Demo User"}</p>
-              <p className="truncate text-sm text-text-secondary">{user?.company_name || "Demo Co"}</p>
+              <p className="truncate text-base font-semibold text-slate-900">{user?.full_name || "Demo User"}</p>
+              <p className="truncate text-sm text-slate-500">{user?.company_name || "Demo Co"}</p>
             </div>
           </div>
-          <p className="mt-3 text-xs leading-6 text-text-muted">
+          <p className="mt-3 text-xs leading-6 text-slate-500">
             Workspace session is active. Assistant history remains attached while you stay signed in.
           </p>
         </div>
@@ -60,17 +60,17 @@ function SidebarContent({ user, onLogout, onClose }) {
           return (
             <NavLink key={item.to} to={item.to} onClick={onClose} className="block">
               {({ isActive }) => (
-                <div className="relative overflow-hidden rounded-full">
+                <div className="relative overflow-hidden rounded-2xl">
                   {isActive ? (
                     <motion.div
                       layoutId="sidebar-active-pill"
-                      className="absolute inset-0 rounded-full bg-purple/20"
+                      className="absolute inset-0 rounded-2xl bg-violet-50"
                       transition={{ type: "spring", stiffness: 420, damping: 34 }}
                     />
                   ) : null}
                   <div
-                    className={`relative flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold ${
-                      isActive ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
+                    className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold ${
+                      isActive ? "text-[#20175f]" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -83,8 +83,12 @@ function SidebarContent({ user, onLogout, onClose }) {
         })}
       </nav>
 
-      <div className="border-t border-navy-border px-4 py-4">
-        <button type="button" onClick={onLogout} className="ghost-button w-full justify-center">
+      <div className="border-t border-slate-200 px-4 py-4">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm hover:border-violet-200 hover:text-violet-700"
+        >
           <LogOut className="h-4 w-4" />
           Logout
         </button>
@@ -101,7 +105,7 @@ function SidebarContent({ user, onLogout, onClose }) {
 export default function Sidebar({ user, mobileOpen, onClose, onLogout }) {
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-navy-border bg-navy md:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[260px] border-r border-slate-200 bg-[#fbfcff] md:block">
         <SidebarContent user={user} onLogout={onLogout} onClose={onClose} />
       </aside>
 
@@ -122,7 +126,7 @@ export default function Sidebar({ user, mobileOpen, onClose, onLogout }) {
               animate={{ x: 0 }}
               exit={{ x: -260 }}
               transition={{ type: "spring", stiffness: 260, damping: 28 }}
-              className="fixed inset-y-0 left-0 z-50 w-[220px] border-r border-navy-border bg-navy md:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[260px] border-r border-slate-200 bg-[#fbfcff] md:hidden"
             >
               <SidebarContent user={user} onLogout={onLogout} onClose={onClose} />
             </motion.aside>

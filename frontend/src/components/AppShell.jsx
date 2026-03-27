@@ -33,7 +33,7 @@ export default function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="page-grid min-h-screen bg-bg">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f5f7ff_55%,#eef3ff_100%)] text-slate-900">
       <Sidebar
         user={user}
         mobileOpen={sidebarOpen}
@@ -41,7 +41,7 @@ export default function AppShell({
         onLogout={logout}
       />
 
-      <div className={`min-h-screen transition-[margin] duration-180 md:ml-[220px] ${assistantOpen ? "xl:mr-[340px]" : ""}`}>
+      <div className={`min-h-screen transition-[margin] duration-180 md:ml-[260px] ${assistantOpen ? "xl:mr-[360px]" : ""}`}>
         <Header
           title={title}
           assistantOpen={assistantOpen}
@@ -56,7 +56,7 @@ export default function AppShell({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18 }}
-          className="px-4 py-5 md:px-6 lg:px-8"
+          className="px-4 py-6 md:px-8 lg:px-10"
         >
           {children}
         </motion.main>
