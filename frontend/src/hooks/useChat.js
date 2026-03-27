@@ -13,25 +13,24 @@ function createSessionId() {
 /**
  * Manage dashboard chat history, streaming state, and message submission.
  * @returns {{
- * messages: Array,
- * isStreaming: boolean,
- * sessionId: string,
- * lastInteractionAt: string | null,
- * lastError: string,
- * sendMessage: (query: string) => Promise<void>,
- * clearHistory: () => Promise<void>
+ *  messages: Array,
+ *  isStreaming: boolean,
+ *  sessionId: string,
+ *  lastActivity: string | null,
+ *  sendMessage: (query: string) => Promise<void>,
+ *  clearHistory: () => Promise<void>
  * }}
  */
 export function useChat() {
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [lastInteractionAt, setLastInteractionAt] = useState(null);
-  const [lastError, setLastError] = useState("");
+  const [lastActivity, setLastActivity] = useState(null);
   const [sessionId] = useState(() => {
     const existing = sessionStorage.getItem("cubitax_chat_session");
     if (existing) {
       return existing;
     }
+
     const next = createSessionId();
     sessionStorage.setItem("cubitax_chat_session", next);
     return next;
@@ -42,8 +41,8 @@ export function useChat() {
     try {
       const response = await api.chat.getHistory(sessionId);
       setMessages(response.messages || []);
-      const latestMessage = response.messages?.[response.messages.length - 1];
-      setLastInteractionAt(latestMessage?.created_at || null);
+      const latest = response.messages?.[response.messages.length - 1];
+      setLastActivity(latest?.created_at || null);
     } catch (error) {
       setMessages([]);
     }
@@ -56,13 +55,9 @@ export function useChat() {
 
     const createdAt = new Date().toISOString();
     const userMessage = { role: "user", content: query, citations: [], created_at: createdAt };
-    setLastError("");
-    setMessages((current) => [
-      ...current,
-      userMessage,
-      { role: "assistant", content: "", citations: [], created_at: createdAt }
-    ]);
+    setMessages((current) => [...current, userMessage, { role: "assistant", content: "", citations: [], created_at: createdAt }]);
     setIsStreaming(true);
+    setLastActivity(createdAt);
 
     await new Promise((resolve) => {
       let draft = "";
@@ -91,7 +86,7 @@ export function useChat() {
           streamRef.current?.close();
           streamRef.current = null;
           setIsStreaming(false);
-          setLastInteractionAt(new Date().toISOString());
+          setLastActivity(new Date().toISOString());
           resolve();
         },
         async onError() {
@@ -105,20 +100,19 @@ export function useChat() {
                 role: "assistant",
                 content: response.answer,
                 citations: response.citations || [],
-                created_at: createdAt,
-                query_type: response.query_type
+                created_at: createdAt
               };
               return next;
             });
-            setLastInteractionAt(new Date().toISOString());
+            setLastActivity(new Date().toISOString());
           } catch (error) {
-            setLastError("Assistant response unavailable");
-            toast.error("Unable to get a response from CubitaxAI");
+            toast.error("CubitaxAI could not complete the response");
             setMessages((current) => {
               const next = [...current];
               next[next.length - 1] = {
                 role: "assistant",
-                content: "I could not complete the response. Please retry in a few seconds or narrow the question.",
+                content:
+                  "I could not complete the answer right now. Please retry in a few seconds or make the question more specific.",
                 citations: [],
                 created_at: createdAt
               };
@@ -138,8 +132,7 @@ export function useChat() {
     streamRef.current = null;
     await api.chat.clearHistory(sessionId);
     setMessages([]);
-    setLastError("");
-    setLastInteractionAt(null);
+    setLastActivity(null);
   }
 
   useEffect(() => {
@@ -153,8 +146,7 @@ export function useChat() {
     messages,
     isStreaming,
     sessionId,
-    lastInteractionAt,
-    lastError,
+    lastActivity,
     sendMessage,
     clearHistory
   };

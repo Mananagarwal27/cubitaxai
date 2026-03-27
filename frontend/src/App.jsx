@@ -2,25 +2,26 @@ import { Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import PublicOnlyRoute from "./components/common/PublicOnlyRoute";
-import DashboardPage from "./pages/DashboardPage";
-import DeadlinesPage from "./pages/DeadlinesPage";
-import DocumentsPage from "./pages/DocumentsPage";
-import GSTPage from "./pages/GSTPage";
-import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ReportsPage from "./pages/ReportsPage";
-import TDSPage from "./pages/TDSPage";
+import Dashboard from "./pages/Dashboard";
+import Deadlines from "./pages/Deadlines";
+import Documents from "./pages/Documents";
+import GSTCompliance from "./pages/GSTCompliance";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Reports from "./pages/Reports";
+import SettingsPage from "./pages/Settings";
+import TDSWorkbench from "./pages/TDSWorkbench";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Landing />} />
       <Route
         path="/login"
         element={
           <PublicOnlyRoute>
-            <LoginPage />
+            <Login />
           </PublicOnlyRoute>
         }
       />
@@ -28,7 +29,7 @@ export default function App() {
         path="/register"
         element={
           <PublicOnlyRoute>
-            <RegisterPage />
+            <Register />
           </PublicOnlyRoute>
         }
       />
@@ -36,7 +37,7 @@ export default function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <Dashboard />
           </ProtectedRoute>
         }
       />
@@ -44,7 +45,7 @@ export default function App() {
         path="/dashboard/documents"
         element={
           <ProtectedRoute>
-            <DocumentsPage />
+            <Documents />
           </ProtectedRoute>
         }
       />
@@ -52,7 +53,7 @@ export default function App() {
         path="/dashboard/gst"
         element={
           <ProtectedRoute>
-            <GSTPage />
+            <GSTCompliance />
           </ProtectedRoute>
         }
       />
@@ -60,7 +61,7 @@ export default function App() {
         path="/dashboard/tds"
         element={
           <ProtectedRoute>
-            <TDSPage />
+            <TDSWorkbench />
           </ProtectedRoute>
         }
       />
@@ -68,7 +69,7 @@ export default function App() {
         path="/dashboard/deadlines"
         element={
           <ProtectedRoute>
-            <DeadlinesPage />
+            <Deadlines />
           </ProtectedRoute>
         }
       />
@@ -76,11 +77,18 @@ export default function App() {
         path="/dashboard/reports"
         element={
           <ProtectedRoute>
-            <ReportsPage />
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
     </Routes>
   );
 }
-

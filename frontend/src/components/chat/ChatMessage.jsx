@@ -1,13 +1,10 @@
 /**
  * Render a single chat message bubble.
- * @param {{ message: { role: string, content: string, citations?: Array, created_at?: string } }} props
+ * @param {{ message: { role: string, content: string, citations?: Array } }} props
  * @returns {JSX.Element}
  */
 export default function ChatMessage({ message }) {
   const isUser = message.role === "user";
-  const timeLabel = message.created_at
-    ? new Date(message.created_at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })
-    : null;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -16,14 +13,6 @@ export default function ChatMessage({ message }) {
           isUser ? "bg-brand-accent text-white" : "border border-violet-100 bg-white text-slate-800"
         }`}
       >
-        <div
-          className={`mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-            isUser ? "text-violet-100" : "text-slate-400"
-          }`}
-        >
-          <span>{isUser ? "You" : "CubitaxAI"}</span>
-          {timeLabel ? <span className={isUser ? "text-violet-200" : "text-slate-300"}>{timeLabel}</span> : null}
-        </div>
         <p className="whitespace-pre-wrap leading-6">{message.content || "..."}</p>
         {!isUser && message.citations?.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -41,3 +30,4 @@ export default function ChatMessage({ message }) {
     </div>
   );
 }
+

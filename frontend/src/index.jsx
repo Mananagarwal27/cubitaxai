@@ -25,10 +25,18 @@ root.render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "#141736",
+                color: "#f0f2ff",
+                border: "1px solid #252854"
+              }
+            }}
+          />
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
-
