@@ -1,0 +1,352 @@
+[
+  {
+    "id": "TDS_001",
+    "query": "Calculate TDS on professional fees of INR 5,00,000 under Section 194J when PAN is available",
+    "expected_answer_contains": ["194J", "10%", "50,000"],
+    "category": "calculation",
+    "section_ref": "Sec 194J"
+  },
+  {
+    "id": "TDS_002",
+    "query": "What is the TDS rate on contractor payments under Section 194C for INR 2,00,000?",
+    "expected_answer_contains": ["194C", "1%", "2,000"],
+    "category": "calculation",
+    "section_ref": "Sec 194C"
+  },
+  {
+    "id": "TDS_003",
+    "query": "Calculate TDS on rent payment of INR 3,00,000 under Section 194I",
+    "expected_answer_contains": ["194I", "10%", "30,000"],
+    "category": "calculation",
+    "section_ref": "Sec 194I"
+  },
+  {
+    "id": "TDS_004",
+    "query": "What is the TDS on commission payment of INR 50,000 under Section 194H?",
+    "expected_answer_contains": ["194H", "5%", "2,500"],
+    "category": "calculation",
+    "section_ref": "Sec 194H"
+  },
+  {
+    "id": "TDS_005",
+    "query": "What happens when TDS is deducted without PAN under Section 194J for INR 1,00,000?",
+    "expected_answer_contains": ["20%", "20,000"],
+    "category": "calculation",
+    "section_ref": "Sec 194J"
+  },
+  {
+    "id": "TDS_006",
+    "query": "What is TDS on interest on fixed deposit of INR 1,00,000 under Section 194A?",
+    "expected_answer_contains": ["194A", "10%", "10,000"],
+    "category": "calculation",
+    "section_ref": "Sec 194A"
+  },
+  {
+    "id": "TDS_007",
+    "query": "Calculate TDS on payment to non-resident of INR 10,00,000 under Section 195",
+    "expected_answer_contains": ["195", "20%"],
+    "category": "calculation",
+    "section_ref": "Sec 195"
+  },
+  {
+    "id": "TDS_008",
+    "query": "What is the TDS on cash withdrawal of INR 50,00,000 under Section 194N?",
+    "expected_answer_contains": ["194N", "2%"],
+    "category": "calculation",
+    "section_ref": "Sec 194N"
+  },
+  {
+    "id": "TDS_009",
+    "query": "TDS rate on insurance commission of INR 25,000 under Section 194D",
+    "expected_answer_contains": ["194D", "5%"],
+    "category": "calculation",
+    "section_ref": "Sec 194D"
+  },
+  {
+    "id": "TDS_010",
+    "query": "Higher TDS rate under Section 206AB for specified non-filers paying INR 3,00,000",
+    "expected_answer_contains": ["206AB", "5%"],
+    "category": "calculation",
+    "section_ref": "Sec 206AB"
+  },
+  {
+    "id": "GST_001",
+    "query": "Calculate GST on intra-state supply of goods worth INR 10,00,000 at 18%",
+    "expected_answer_contains": ["18%", "CGST", "SGST"],
+    "category": "calculation",
+    "section_ref": "Sec 9"
+  },
+  {
+    "id": "GST_002",
+    "query": "What is GST on inter-state supply of services worth INR 5,00,000 at 18%?",
+    "expected_answer_contains": ["IGST", "18%"],
+    "category": "calculation",
+    "section_ref": "Sec 9"
+  },
+  {
+    "id": "GST_003",
+    "query": "Explain the GST composition scheme under Section 10",
+    "expected_answer_contains": ["composition", "concessional", "turnover"],
+    "category": "section_lookup",
+    "section_ref": "Sec 10"
+  },
+  {
+    "id": "GST_004",
+    "query": "What are the conditions for availing Input Tax Credit under Section 16?",
+    "expected_answer_contains": ["invoice", "receipt", "return filing"],
+    "category": "section_lookup",
+    "section_ref": "Sec 16"
+  },
+  {
+    "id": "GST_005",
+    "query": "When is GST registration mandatory under Section 22?",
+    "expected_answer_contains": ["turnover", "threshold", "registration"],
+    "category": "section_lookup",
+    "section_ref": "Sec 22"
+  },
+  {
+    "id": "AT_001",
+    "query": "Calculate advance tax installment for Q1 with estimated tax liability of INR 10,00,000",
+    "expected_answer_contains": ["15%", "1,50,000", "15 June"],
+    "category": "calculation",
+    "section_ref": "Sec 211"
+  },
+  {
+    "id": "AT_002",
+    "query": "What is the advance tax schedule for Q2?",
+    "expected_answer_contains": ["45%", "September"],
+    "category": "calculation",
+    "section_ref": "Sec 211"
+  },
+  {
+    "id": "AT_003",
+    "query": "Advance tax Q3 installment for total tax liability of INR 20,00,000",
+    "expected_answer_contains": ["75%", "December"],
+    "category": "calculation",
+    "section_ref": "Sec 211"
+  },
+  {
+    "id": "AT_004",
+    "query": "Final advance tax installment due by March",
+    "expected_answer_contains": ["100%", "March"],
+    "category": "calculation",
+    "section_ref": "Sec 211"
+  },
+  {
+    "id": "SEC_001",
+    "query": "What deductions are allowed under Section 80C?",
+    "expected_answer_contains": ["80C", "1,50,000", "PPF", "ELSS"],
+    "category": "section_lookup",
+    "section_ref": "Sec 80C"
+  },
+  {
+    "id": "SEC_002",
+    "query": "Explain Section 80D medical insurance deduction",
+    "expected_answer_contains": ["80D", "medical", "insurance", "premium"],
+    "category": "section_lookup",
+    "section_ref": "Sec 80D"
+  },
+  {
+    "id": "SEC_003",
+    "query": "What is Section 80E education loan deduction?",
+    "expected_answer_contains": ["80E", "education", "interest", "loan"],
+    "category": "section_lookup",
+    "section_ref": "Sec 80E"
+  },
+  {
+    "id": "SEC_004",
+    "query": "Explain the rebate under Section 87A",
+    "expected_answer_contains": ["87A", "rebate", "resident"],
+    "category": "section_lookup",
+    "section_ref": "Sec 87A"
+  },
+  {
+    "id": "SEC_005",
+    "query": "What are the provisions of Section 139 regarding return filing?",
+    "expected_answer_contains": ["139", "filing", "return"],
+    "category": "section_lookup",
+    "section_ref": "Sec 139"
+  },
+  {
+    "id": "SEC_006",
+    "query": "What does Section 143 cover?",
+    "expected_answer_contains": ["143", "assessment", "processing"],
+    "category": "section_lookup",
+    "section_ref": "Sec 143"
+  },
+  {
+    "id": "SEC_007",
+    "query": "Explain penalties under Section 271 for non-compliance",
+    "expected_answer_contains": ["271", "penalty", "concealment"],
+    "category": "section_lookup",
+    "section_ref": "Sec 271"
+  },
+  {
+    "id": "PENALTY_001",
+    "query": "What is the interest charged under Section 234A for late filing?",
+    "expected_answer_contains": ["234A", "interest", "delay", "filing"],
+    "category": "section_lookup",
+    "section_ref": "Sec 234A"
+  },
+  {
+    "id": "PENALTY_002",
+    "query": "Interest under Section 234B for short payment of advance tax",
+    "expected_answer_contains": ["234B", "advance", "tax"],
+    "category": "section_lookup",
+    "section_ref": "Sec 234B"
+  },
+  {
+    "id": "PENALTY_003",
+    "query": "Section 234C interest on deferment of advance tax installments",
+    "expected_answer_contains": ["234C", "deferment", "installment"],
+    "category": "section_lookup",
+    "section_ref": "Sec 234C"
+  },
+  {
+    "id": "PENALTY_004",
+    "query": "Late filing fee under Section 234F",
+    "expected_answer_contains": ["234F", "late", "filing", "fee"],
+    "category": "section_lookup",
+    "section_ref": "Sec 234F"
+  },
+  {
+    "id": "DL_001",
+    "query": "When is GSTR-1 due for regular taxpayers?",
+    "expected_answer_contains": ["11th", "GSTR-1"],
+    "category": "deadline_check",
+    "section_ref": "Rule 59"
+  },
+  {
+    "id": "DL_002",
+    "query": "What is the due date for GSTR-3B?",
+    "expected_answer_contains": ["20th", "GSTR-3B"],
+    "category": "deadline_check",
+    "section_ref": "Rule 61"
+  },
+  {
+    "id": "DL_003",
+    "query": "When should TDS be deposited?",
+    "expected_answer_contains": ["7th"],
+    "category": "deadline_check",
+    "section_ref": "Rule 30"
+  },
+  {
+    "id": "DL_004",
+    "query": "What is the due date for quarterly TDS returns?",
+    "expected_answer_contains": ["24Q", "26Q", "quarterly"],
+    "category": "deadline_check",
+    "section_ref": "Rule 31A"
+  },
+  {
+    "id": "DL_005",
+    "query": "When is the last date for filing ITR for individuals?",
+    "expected_answer_contains": ["31 July"],
+    "category": "deadline_check",
+    "section_ref": "Sec 139"
+  },
+  {
+    "id": "DL_006",
+    "query": "ITR filing deadline for companies requiring audit?",
+    "expected_answer_contains": ["31 October", "audit"],
+    "category": "deadline_check",
+    "section_ref": "Sec 139"
+  },
+  {
+    "id": "ITC_001",
+    "query": "What are blocked credits under Section 17 of GST?",
+    "expected_answer_contains": ["17", "blocked", "restricted"],
+    "category": "section_lookup",
+    "section_ref": "Sec 17"
+  },
+  {
+    "id": "ITC_002",
+    "query": "Compulsory GST registration cases under Section 24",
+    "expected_answer_contains": ["24", "compulsory", "inter-state"],
+    "category": "section_lookup",
+    "section_ref": "Sec 24"
+  },
+  {
+    "id": "GST_PROC_001",
+    "query": "What does Section 74 of GST cover?",
+    "expected_answer_contains": ["74", "fraud", "wilful", "suppression"],
+    "category": "section_lookup",
+    "section_ref": "Sec 74"
+  },
+  {
+    "id": "GST_PROC_002",
+    "query": "General provisions under Section 75 of GST",
+    "expected_answer_contains": ["75", "procedure", "demand", "recovery"],
+    "category": "section_lookup",
+    "section_ref": "Sec 75"
+  },
+  {
+    "id": "CALC_80C_001",
+    "query": "If I invest INR 2,00,000 in PPF and ELSS, what is my Section 80C deduction?",
+    "expected_answer_contains": ["80C", "1,50,000"],
+    "category": "calculation",
+    "section_ref": "Sec 80C"
+  },
+  {
+    "id": "CALC_80C_002",
+    "query": "Section 80C deduction for INR 50,000 investment in tax saver FD",
+    "expected_answer_contains": ["80C", "50,000"],
+    "category": "calculation",
+    "section_ref": "Sec 80C"
+  },
+  {
+    "id": "CROSS_001",
+    "query": "If I miss filing my ITR under Section 139, what penalties apply?",
+    "expected_answer_contains": ["234A", "234F"],
+    "category": "general_explanation",
+    "section_ref": "Sec 139"
+  },
+  {
+    "id": "CROSS_002",
+    "query": "What is the relationship between Section 80C and return filing?",
+    "expected_answer_contains": ["80C", "139"],
+    "category": "general_explanation",
+    "section_ref": "Sec 80C"
+  },
+  {
+    "id": "CROSS_003",
+    "query": "How does Section 206AB higher TDS interact with 194C?",
+    "expected_answer_contains": ["206AB", "194C", "non-filer"],
+    "category": "general_explanation",
+    "section_ref": "Sec 206AB"
+  },
+  {
+    "id": "GENERAL_001",
+    "query": "What is the difference between CGST, SGST, and IGST?",
+    "expected_answer_contains": ["CGST", "SGST", "IGST"],
+    "category": "general_explanation",
+    "section_ref": "Sec 9"
+  },
+  {
+    "id": "GENERAL_002",
+    "query": "How are TDS rates determined when PAN is not available?",
+    "expected_answer_contains": ["20%", "PAN"],
+    "category": "general_explanation",
+    "section_ref": "Sec 206AA"
+  },
+  {
+    "id": "GENERAL_003",
+    "query": "What is the value of taxable supply under GST Section 15?",
+    "expected_answer_contains": ["15", "value", "taxable", "supply"],
+    "category": "section_lookup",
+    "section_ref": "Sec 15"
+  },
+  {
+    "id": "GENERAL_004",
+    "query": "What returns does GSTR-1 cover?",
+    "expected_answer_contains": ["GSTR-1", "outward", "supply"],
+    "category": "section_lookup",
+    "section_ref": "Sec 37"
+  },
+  {
+    "id": "GENERAL_005",
+    "query": "What is GSTR-3B and when is it due?",
+    "expected_answer_contains": ["GSTR-3B", "return", "20th"],
+    "category": "deadline_check",
+    "section_ref": "Sec 39"
+  }
+]

@@ -1,170 +1,152 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
-const TOKEN_KEY = "cubitax_token";
-const unauthorizedListeners = new Set();
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
-const client = axios.create({
-  baseURL: API_BASE_URL
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: { "Content-Type": "application/json" },
+  timeout: 30000,
 });
 
-export function subscribeToUnauthorized(handler) {
-  unauthorizedListeners.add(handler);
-  return () => unauthorizedListeners.delete(handler);
-}
+// ── Request Interceptor: Attach JWT ─────────────────────────────────
 
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem(TOKEN_KEY);
-      unauthorizedListeners.forEach((listener) => listener());
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("cubitax_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error);
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ── Response Interceptor: Auto-refresh on 401 ──────────────────────
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (token) prom.resolve(token);
+    else prom.reject(error);
+  });
+  failedQueue = [];
+};
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Skip refresh for auth endpoints
+    if (
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.url?.includes("/auth/")
+    ) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return apiClient(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshToken = localStorage.getItem("cubitax_refresh_token");
+      if (!refreshToken) {
+        throw new Error("No refresh token");
+      }
+
+      const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
+        refresh_token: refreshToken,
+      });
+
+      localStorage.setItem("cubitax_token", data.access_token);
+      localStorage.setItem("cubitax_refresh_token", data.refresh_token);
+      processQueue(null, data.access_token);
+
+      originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      localStorage.removeItem("cubitax_token");
+      localStorage.removeItem("cubitax_refresh_token");
+      localStorage.removeItem("cubitax_user");
+      window.location.href = "/login";
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
 
-export const authApi = {
-  async login(payload) {
-    const response = await client.post("/api/auth/login", payload);
-    return response.data;
-  },
-  async register(payload) {
-    const response = await client.post("/api/auth/register", payload);
-    return response.data;
-  },
-  async getMe() {
-    const response = await client.get("/api/auth/me");
-    return response.data;
-  }
-};
+// ── WebSocket Helper ────────────────────────────────────────────────
 
-export const uploadApi = {
-  async uploadDocument(file, onProgress) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await client.post("/api/upload/document", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      },
-      onUploadProgress(event) {
-        if (event.total && onProgress) {
-          onProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      }
-    });
-    return response.data;
-  },
-  async getDocuments() {
-    const response = await client.get("/api/upload/documents");
-    return response.data;
-  },
-  async getDocumentStatus(docId) {
-    const response = await client.get(`/api/upload/documents/${docId}/status`);
-    return response.data;
-  }
-};
+export function createProgressSocket(userId) {
+  const wsUrl = API_URL.replace("http", "ws");
+  const ws = new WebSocket(`${wsUrl}/ws/progress/${userId}`);
+  return ws;
+}
 
-export const chatApi = {
-  async sendMessage(payload) {
-    const response = await client.post("/api/chat/message", payload);
-    return response.data;
-  },
-  streamMessage({ query, sessionId, onToken, onCitation, onDone, onError }) {
-    const token = localStorage.getItem(TOKEN_KEY);
-    const url = new URL(`${API_BASE_URL}/api/chat/stream`);
-    url.searchParams.set("query", query);
-    url.searchParams.set("session_id", sessionId);
-    if (token) {
-      url.searchParams.set("token", token);
-    }
-
-    const source = new EventSource(url.toString());
-    source.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        if (payload.type === "token" && onToken) {
-          onToken(payload.data);
-        }
-        if (payload.type === "citation" && onCitation) {
-          onCitation(payload.data);
-        }
-        if (payload.type === "done" && onDone) {
-          onDone(payload.data);
-        }
-      } catch (error) {
-        if (onError) {
-          onError(error);
-        }
-      }
-    };
-    source.onerror = (error) => {
-      source.close();
-      if (onError) {
-        onError(error);
-      }
-    };
-    return source;
-  },
-  async getHistory(sessionId) {
-    const response = await client.get(`/api/chat/history/${sessionId}`);
-    return response.data;
-  },
-  async clearHistory(sessionId) {
-    const response = await client.delete(`/api/chat/history/${sessionId}`);
-    return response.data;
-  }
-};
-
-export const dashboardApi = {
-  async getMetrics() {
-    const response = await client.get("/api/dashboard/metrics");
-    return response.data;
-  },
-  async getDeadlines() {
-    const response = await client.get("/api/dashboard/deadlines");
-    return response.data;
-  },
-  async getAlerts() {
-    const response = await client.get("/api/dashboard/alerts");
-    return response.data;
-  }
-};
-
-export const reportsApi = {
-  async generateReport() {
-    const response = await client.post("/api/reports/generate");
-    return response.data;
-  },
-  async downloadReport(reportId) {
-    const response = await client.get(`/api/reports/download/${reportId}`, {
-      responseType: "blob"
-    });
-    const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = `cubitaxai-report-${reportId}.pdf`;
-    link.click();
-    window.URL.revokeObjectURL(blobUrl);
-  }
-};
+// ── API Methods ─────────────────────────────────────────────────────
 
 export const api = {
-  auth: authApi,
-  upload: uploadApi,
-  chat: chatApi,
-  dashboard: dashboardApi,
-  reports: reportsApi
+  // Auth
+  register: (data) => apiClient.post("/api/auth/register", data),
+  login: (data) => apiClient.post("/api/auth/login", data),
+  getProfile: () => apiClient.get("/api/auth/me"),
+  updateProfile: (data) => apiClient.put("/api/auth/me", null, { params: data }),
+
+  // API Keys
+  createApiKey: (data) => apiClient.post("/api/auth/api-keys", data),
+  listApiKeys: () => apiClient.get("/api/auth/api-keys"),
+  revokeApiKey: (id) => apiClient.delete(`/api/auth/api-keys/${id}`),
+
+  // Chat
+  sendMessage: (data) => apiClient.post("/api/chat/message", data),
+  getChatHistory: (sessionId) => apiClient.get(`/api/chat/history/${sessionId}`),
+  deleteChatHistory: (sessionId) => apiClient.delete(`/api/chat/history/${sessionId}`),
+  listSessions: () => apiClient.get("/api/chat/sessions"),
+
+  // Documents
+  uploadDocument: (formData, onProgress) =>
+    apiClient.post("/api/upload/document", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress: onProgress,
+      timeout: 120000,
+    }),
+  listDocuments: () => apiClient.get("/api/upload/documents"),
+  deleteDocument: (id) => apiClient.delete(`/api/upload/documents/${id}`),
+
+  // Dashboard
+  getMetrics: () => apiClient.get("/api/dashboard/metrics"),
+  getAlerts: () => apiClient.get("/api/dashboard/alerts"),
+  getDeadlines: () => apiClient.get("/api/dashboard/deadlines"),
+
+  // Reports
+  generateReport: (data) => apiClient.post("/api/reports/generate", data),
+  listReports: () => apiClient.get("/api/reports/list"),
+  downloadReport: (id, format = "pdf") =>
+    apiClient.get(`/api/reports/download/${id}?format=${format}`, { responseType: "blob" }),
+
+  // Admin
+  createOrganization: (data) => apiClient.post("/api/admin/organizations", data),
+  listTeam: () => apiClient.get("/api/admin/team"),
+  inviteTeamMember: (data) => apiClient.post("/api/admin/team/invite", data),
+  changeMemberRole: (userId, role) => apiClient.put(`/api/admin/team/${userId}/role`, null, { params: { role } }),
+  removeMember: (userId) => apiClient.delete(`/api/admin/team/${userId}`),
+
+  // Health
+  getHealth: () => apiClient.get("/health"),
 };
 
-export { TOKEN_KEY };
-export default client;
-
+export default apiClient;

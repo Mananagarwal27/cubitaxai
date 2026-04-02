@@ -30,8 +30,18 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Create all registered database tables."""
+    """Import all models and create their database tables.
+
+    All model modules must be imported before ``create_all`` so that
+    SQLAlchemy registers every table in ``Base.metadata``.
+    """
+
+    # Ensure every model is imported (order doesn't matter)
+    import app.models.organization  # noqa: F401
+    import app.models.user  # noqa: F401
+    import app.models.document  # noqa: F401
+    import app.models.experiment  # noqa: F401
+    import app.memory.entity_memory  # noqa: F401
 
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
-

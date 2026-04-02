@@ -1,6 +1,6 @@
 {
   "name": "cubitaxai-frontend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "@tanstack/react-query": "^5.40.0",
@@ -13,9 +13,12 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.4.1",
+    "react-markdown": "^9.0.1",
     "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
     "recharts": "^2.12.7",
+    "rehype-highlight": "^7.0.0",
+    "remark-gfm": "^4.0.0",
     "tailwindcss": "^3.4.3"
   },
   "scripts": {
@@ -37,4 +40,3 @@
     ]
   }
 }
-

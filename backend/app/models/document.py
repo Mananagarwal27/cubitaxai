@@ -1,4 +1,4 @@
-"""Document database model and enum definitions."""
+"""Document database model with versioning and deduplication support."""
 
 from __future__ import annotations
 
@@ -21,6 +21,8 @@ class DocumentType(str, Enum):
     TDS_CERT = "TDS_CERT"
     GST_CIRCULAR = "GST_CIRCULAR"
     IT_ACT = "IT_ACT"
+    GSTR_2B = "GSTR_2B"
+    FINANCE_ACT = "FINANCE_ACT"
     OTHER = "OTHER"
 
 
@@ -31,6 +33,7 @@ class DocumentStatus(str, Enum):
     PROCESSING = "PROCESSING"
     INDEXED = "INDEXED"
     FAILED = "FAILED"
+    ARCHIVED = "ARCHIVED"
 
 
 class Document(Base):
@@ -40,6 +43,9 @@ class Document(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True
+    )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_type: Mapped[DocumentType] = mapped_column(
         SqlEnum(DocumentType, native_enum=False),
@@ -53,6 +59,14 @@ class Document(Base):
     )
     chunk_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     pinecone_namespace: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Versioning
+    content_hash: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    financial_year: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    effective_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

@@ -1,8 +1,9 @@
-"""Document upload and ingestion API routes."""
+"""Document upload and ingestion API routes (v2 — dedup + org namespace)."""
 
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import tempfile
 from pathlib import Path
@@ -15,9 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.ingestor import DocumentIngestorAgent
 from app.database import get_db
+from app.dependencies import get_org_namespace
 from app.models.document import Document, DocumentStatus, DocumentType
 from app.models.schemas import DocumentItem, DocumentListResponse, DocumentUploadResponse
 from app.models.user import User
+from app.observability.metrics import increment_counter
 from app.services.auth_service import get_current_user
 from app.tasks.celery_tasks import process_document
 
@@ -42,6 +45,7 @@ async def _dispatch_ingestion(doc_id: str, user_id: str, file_path: str) -> None
 async def upload_document(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
+    namespace: str = Depends(get_org_namespace),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentUploadResponse:
     """Accept a PDF upload and trigger asynchronous ingestion."""
@@ -53,6 +57,21 @@ async def upload_document(
     if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="PDF exceeds 100MB limit")
 
+    # Duplicate detection via content hash
+    content_hash = hashlib.sha256(file_bytes).hexdigest()
+    existing = await db.execute(
+        select(Document).where(
+            Document.user_id == current_user.id,
+            Document.content_hash == content_hash,
+            Document.status != DocumentStatus.ARCHIVED,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A document with identical content has already been uploaded",
+        )
+
     tmp_dir = Path(tempfile.gettempdir()) / "cubitaxai_uploads"
     tmp_dir.mkdir(parents=True, exist_ok=True)
     file_path = tmp_dir / f"{uuid4().hex}.pdf"
@@ -60,16 +79,19 @@ async def upload_document(
 
     document = Document(
         user_id=current_user.id,
+        organization_id=current_user.organization_id,
         filename=file.filename,
         file_type=DocumentType.OTHER,
         status=DocumentStatus.PROCESSING,
         chunk_count=0,
-        pinecone_namespace=f"user_{current_user.id}",
+        pinecone_namespace=namespace,
+        content_hash=content_hash,
     )
     db.add(document)
     await db.commit()
     await db.refresh(document)
 
+    increment_counter("total_uploads")
     await _dispatch_ingestion(str(document.id), str(current_user.id), str(file_path))
     return DocumentUploadResponse(doc_id=document.id, status=document.status, filename=document.filename)
 
@@ -103,3 +125,21 @@ async def get_document_status(
     if not document:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
     return DocumentItem.model_validate(document)
+
+
+@router.delete("/documents/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    doc_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Soft-delete (archive) a document."""
+
+    result = await db.execute(
+        select(Document).where(Document.id == UUID(doc_id), Document.user_id == current_user.id)
+    )
+    document = result.scalar_one_or_none()
+    if not document:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+    document.status = DocumentStatus.ARCHIVED
+    await db.commit()

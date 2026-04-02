@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import PublicOnlyRoute from "./components/common/PublicOnlyRoute";
+import ChatPage from "./pages/ChatPage";
 import Dashboard from "./pages/Dashboard";
 import Deadlines from "./pages/Deadlines";
 import Documents from "./pages/Documents";
@@ -31,6 +32,14 @@ export default function App() {
           <PublicOnlyRoute>
             <Register />
           </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
         }
       />
       <Route

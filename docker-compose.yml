@@ -31,6 +31,25 @@ services:
     networks:
       - cubitax-network
 
+  neo4j:
+    image: neo4j:5-community
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/cubitax_neo4j
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cubitax-network
+
   chromadb:
     image: chromadb/chroma:0.5.0
     restart: unless-stopped
@@ -63,11 +82,16 @@ services:
       - ./.env
     ports:
       - "8000:8000"
+    volumes:
+      - uploads-data:/app/uploads
+      - reports-data:/app/generated_reports
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      neo4j:
+        condition: service_started
       chromadb:
         condition: service_started
     healthcheck:
@@ -78,13 +102,13 @@ services:
     networks:
       - cubitax-network
 
-  celery:
+  celery-worker:
     build:
       context: ./backend
     restart: unless-stopped
     env_file:
       - ./.env
-    command: celery -A app.tasks.celery_tasks.celery_app worker --loglevel=info
+    command: celery -A app.tasks.celery_tasks.celery_app worker --loglevel=info --concurrency=4
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,6 +116,21 @@ services:
         condition: service_healthy
       chromadb:
         condition: service_started
+    volumes:
+      - uploads-data:/app/uploads
+    networks:
+      - cubitax-network
+
+  celery-beat:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    command: celery -A app.tasks.celery_tasks.celery_app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - cubitax-network
 
@@ -118,7 +157,10 @@ services:
 
 volumes:
   postgres-data:
+  neo4j-data:
   chroma-data:
+  uploads-data:
+  reports-data:
 
 networks:
   cubitax-network:
