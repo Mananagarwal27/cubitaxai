@@ -131,6 +131,7 @@ export const api = {
   getMetrics: () => apiClient.get("/api/dashboard/metrics"),
   getAlerts: () => apiClient.get("/api/dashboard/alerts"),
   getDeadlines: () => apiClient.get("/api/dashboard/deadlines"),
+  getFilingStatus: () => apiClient.get("/api/dashboard/filing-status"),
 
   // Reports
   generateReport: (data) => apiClient.post("/api/reports/generate", data),
@@ -149,4 +150,32 @@ export const api = {
   getHealth: () => apiClient.get("/health"),
 };
 
+// ── Nested namespace aliases (for pages using api.dashboard.* pattern) ──
+
+api.dashboard = {
+  getMetrics: () => apiClient.get("/api/dashboard/metrics").then((r) => r.data),
+  getDeadlines: () => apiClient.get("/api/dashboard/deadlines").then((r) => r.data),
+  getAlerts: () => apiClient.get("/api/dashboard/alerts").then((r) => r.data),
+  getFilingStatus: () => apiClient.get("/api/dashboard/filing-status").then((r) => r.data),
+};
+
+api.upload = {
+  uploadDocument: api.uploadDocument,
+  getDocuments: () => apiClient.get("/api/upload/documents").then((r) => r.data),
+  deleteDocument: api.deleteDocument,
+};
+
+api.chat = {
+  sendMessage: api.sendMessage,
+  getHistory: api.getChatHistory,
+  listSessions: api.listSessions,
+};
+
+api.reports = {
+  generate: api.generateReport,
+  list: api.listReports,
+  download: api.downloadReport,
+};
+
 export default apiClient;
+
