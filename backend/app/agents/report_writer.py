@@ -15,8 +15,8 @@ class ReportWriterAgent:
 
         self.compliance_checker = ComplianceCheckerAgent()
 
-    async def generate_compliance_report(self, user_id: str) -> str:
-        """Create a markdown compliance report with citations and recommendations."""
+    async def generate_compliance_report(self, user_id: str) -> dict:
+        """Create a markdown compliance report with citations, recommendations, and metadata."""
 
         deadlines = await self.compliance_checker.get_upcoming_deadlines(user_id)
         filing_status = await self.compliance_checker.check_filing_status(user_id)
@@ -47,7 +47,8 @@ class ReportWriterAgent:
             for deadline in deadlines[:5]
         ) or "- No citations available."
 
-        return f"""# CubitaxAI Compliance Report
+        return {
+            "content": f"""# CubitaxAI Compliance Report
 
 Generated at: {generated_at}
 
@@ -79,5 +80,15 @@ Current compliance score: **{score}/100**.
 ## Citations
 
 {citations}
-"""
+""",
+            "citations": [
+                {
+                    "source": "COMPLIANCE_CALENDAR",
+                    "section_ref": d.section_ref or "Calendar",
+                    "snippet": f"{d.filing_name} due {d.due_date}",
+                    "score": 1.0
+                } for d in deadlines[:5]
+            ],
+            "confidence": 0.95
+        }
 

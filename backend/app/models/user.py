@@ -20,6 +20,7 @@ class UserRole(str, enum.Enum):
     CFO = "cfo"
     ANALYST = "analyst"
     VIEWER = "viewer"
+    CLIENT = "client"
 
 
 class User(Base):

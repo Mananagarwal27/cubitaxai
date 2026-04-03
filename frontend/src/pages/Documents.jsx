@@ -20,7 +20,12 @@ export default function Documents() {
     setIsUploading(true);
     setUploadProgress(0);
     try {
-      await api.upload.uploadDocument(file, setUploadProgress);
+      const formData = new FormData();
+      formData.append("file", file);
+      await api.upload.uploadDocument(formData, (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        setUploadProgress(percentCompleted);
+      });
       toast.success("Document uploaded for indexing");
       documentsQuery.refetch();
     } catch (error) {

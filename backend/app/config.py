@@ -3,84 +3,153 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Central settings object loaded from environment variables."""
 
+    # ── App ──────────────────────────────────────────────
+    APP_NAME: str = "CubitaxAI"
+    APP_ENV: Literal["development", "staging", "production"] = "development"
+    DEBUG: bool = False
+    SECRET_KEY: str                          
+    UPLOAD_DIR: str = "/app/uploads"
+    MAX_UPLOAD_SIZE_MB: int = 50
+    app_name: str = "CubitaxAI"
+    app_version: str = "2.0.0"
+
+    # ── Database ─────────────────────────────────────────
+    DATABASE_URL: str                        
+    DATABASE_POOL_SIZE: int = 10
+    DATABASE_MAX_OVERFLOW: int = 20
+
+    # ── Redis ────────────────────────────────────────────
+    REDIS_URL: str = "redis://redis:6379/0"  
+
+    # ── Celery ───────────────────────────────────────────
+    CELERY_BROKER_URL: str = "redis://redis:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/2"
+
+    # ── JWT ──────────────────────────────────────────────
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ALGORITHM: str = "HS256"
+
+    # ── OpenAI ───────────────────────────────────────────
+    OPENAI_API_KEY: str                      
+    OPENAI_MODEL: str = "gpt-4o"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-large"
+
+    # ── Pinecone ─────────────────────────────────────────
+    PINECONE_API_KEY: str                    
+    PINECONE_INDEX_NAME: str = "cubitaxai"
+    PINECONE_ENVIRONMENT: str = "us-east-1"
+
+    # ── Cohere ───────────────────────────────────────────
+    COHERE_API_KEY: str                      
+
+    # ── Neo4j ────────────────────────────────────────────
+    NEO4J_URI: str = "bolt://neo4j:7687"
+    NEO4J_USER: str = "neo4j"
+    NEO4J_PASSWORD: str                      
+
+    # ── LangSmith (optional but recommended) ─────────────
+    LANGCHAIN_TRACING_V2: bool = False
+    LANGCHAIN_API_KEY: str = ""
+    LANGCHAIN_PROJECT: str = "cubitaxai"
+
+    # ── Email (for deadline alerts) ───────────────────────
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""                      
+    SMTP_PASSWORD: str = ""                  
+    SMTP_FROM_NAME: str = "CubitaxAI Alerts"
+    SMTP_USE_TLS: bool = True
+
+    # ── TRACES / ITD Integration (for live data) ──────────
+    TRACES_CLIENT_ID: str = ""              
+    TRACES_CLIENT_SECRET: str = ""          
+    TRACES_BASE_URL: str = "https://www.tdscpc.gov.in/app/api"
+
+    # ── GST Portal Integration ────────────────────────────
+    GST_CLIENT_ID: str = ""                 
+    GST_CLIENT_SECRET: str = ""
+    GST_BASE_URL: str = "https://api.gst.gov.in/commonapi"
+    GST_OTP_BASE_URL: str = "https://api.gst.gov.in/commonapi/authenticate"
+
+    # ── Tally / Accounting Sync ───────────────────────────
+    TALLY_BRIDGE_URL: str = ""              
+    ZOHO_CLIENT_ID: str = ""               
+    ZOHO_CLIENT_SECRET: str = ""
+    ZOHO_REFRESH_TOKEN: str = ""
+
+    # ── Webhook / Notifications ───────────────────────────
+    WEBHOOK_SECRET: str = ""               
+    ALERT_EMAIL_ENABLED: bool = False
+    ALERT_WEBHOOK_ENABLED: bool = False
+
+    # ── RAGAS Evaluation ─────────────────────────────────
+    RAGAS_EVAL_ENABLED: bool = False
+
+    # ── Rate Limiting ─────────────────────────────────────
+    RATE_LIMIT_CHAT: str = "60/minute"
+    RATE_LIMIT_UPLOAD: str = "10/minute"
+
+    # ── CORS ─────────────────────────────────────────────
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
+        case_sensitive=True,
+        extra="ignore"
     )
 
-    # ── LLM ──────────────────────────────────────────────────────────
-    openai_api_key: str = Field(default="")
-    openai_model: str = Field(default="gpt-4o")
-
-    # ── Vector DB ────────────────────────────────────────────────────
-    pinecone_api_key: str = Field(default="")
-    pinecone_index: str = Field(default="cubitax-index")
-    pinecone_env: str = Field(default="us-east-1")
-    cohere_api_key: str = Field(default="")
-    chroma_host: str = Field(default="chromadb")
-    chroma_port: int = Field(default=8000)
-
-    # ── Database ─────────────────────────────────────────────────────
-    database_url: str = Field(default="sqlite+aiosqlite:///./cubitax.db")
-
-    # ── Redis ────────────────────────────────────────────────────────
-    redis_url: str = Field(default="redis://localhost:6379/0")
-
-    # ── Neo4j ────────────────────────────────────────────────────────
-    neo4j_uri: str = Field(default="bolt://localhost:7687")
-    neo4j_user: str = Field(default="neo4j")
-    neo4j_password: str = Field(default="cubitax_neo4j")
-
-    # ── Auth ─────────────────────────────────────────────────────────
-    secret_key: str = Field(default="change-me-please-change-me-please")
-    algorithm: str = Field(default="HS256")
-    access_token_expire_minutes: int = Field(default=1440)
-
-    # ── App ──────────────────────────────────────────────────────────
-    app_name: str = Field(default="CubitaxAI")
-    app_version: str = Field(default="2.0.0")
-    debug: bool = Field(default=True)
-    allowed_origins: list[str] | str = Field(default="http://localhost:3000")
-    upload_dir: Path = Field(default=Path("uploads"))
-    reports_dir: Path = Field(default=Path("generated_reports"))
-
-    # ── Observability ────────────────────────────────────────────────
-    langsmith_api_key: str = Field(default="")
-    langsmith_project: str = Field(default="cubitaxai")
-    otel_exporter_endpoint: str = Field(default="")
-
-    # ── Rate Limiting ────────────────────────────────────────────────
-    rate_limit_default: str = Field(default="200/minute")
-
-    @field_validator("allowed_origins", mode="before")
+    @field_validator("SECRET_KEY")
     @classmethod
-    def parse_allowed_origins(cls, value: Any) -> list[str]:
-        """Normalize comma-separated or list origin values."""
-        if isinstance(value, list):
-            return [item.strip() for item in value if str(item).strip()]
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return ["http://localhost:3000"]
+    def secret_key_min_length(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters")
+        return v
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_db_url(cls, v: str) -> str:
+        if not v.startswith("postgresql+asyncpg://"):
+            raise ValueError("DATABASE_URL must use postgresql+asyncpg:// scheme")
+        return v
+    
     @property
     def async_database_url(self) -> str:
         """Return an async SQLAlchemy URL for the configured database."""
-        if self.database_url.startswith("postgresql://"):
-            return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        if self.database_url.startswith("sqlite://") and "+aiosqlite" not in self.database_url:
-            return self.database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-        return self.database_url
-
+        return self.DATABASE_URL
+    
+    @property
+    def redis_url(self) -> str:
+        return self.REDIS_URL
+    @property
+    def secret_key(self) -> str:
+        return self.SECRET_KEY
+    @property
+    def algorithm(self) -> str:
+        return self.ALGORITHM
+    @property
+    def access_token_expire_minutes(self) -> int:
+        return self.ACCESS_TOKEN_EXPIRE_MINUTES
+    @property
+    def allowed_origins(self) -> List[str]:
+        return self.CORS_ORIGINS
+    @property
+    def debug(self) -> bool:
+        return self.DEBUG
+    @property
+    def upload_dir(self) -> Path:
+        return Path(self.UPLOAD_DIR)
+    @property
+    def reports_dir(self) -> Path:
+        return Path("generated_reports")
 
 settings = Settings()

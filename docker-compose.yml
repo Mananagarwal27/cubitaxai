@@ -87,6 +87,7 @@ services:
       - ./.env.docker
     environment:
       PYTHONPATH: /app
+      UPLOAD_DIR: /app/uploads
     ports:
       - "8000:8000"
     volumes:
@@ -117,6 +118,7 @@ services:
       - ./.env.docker
     environment:
       PYTHONPATH: /app
+      UPLOAD_DIR: /app/uploads
     command: celery -A app.tasks.celery_tasks.celery_app worker --loglevel=info --concurrency=4
     depends_on:
       postgres:

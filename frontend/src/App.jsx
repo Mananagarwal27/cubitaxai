@@ -13,6 +13,8 @@ import Register from "./pages/Register";
 import Reports from "./pages/Reports";
 import SettingsPage from "./pages/Settings";
 import TDSWorkbench from "./pages/TDSWorkbench";
+import ClientPortal from "./pages/ClientPortal";
+import CADashboard from "./pages/CADashboard";
 
 export default function App() {
   return (
@@ -95,6 +97,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal"
+        element={
+          <ProtectedRoute>
+            <ClientPortal />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/clients"
+        element={
+          <ProtectedRoute>
+            <CADashboard />
           </ProtectedRoute>
         }
       />

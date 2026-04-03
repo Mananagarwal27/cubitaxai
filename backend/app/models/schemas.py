@@ -305,6 +305,8 @@ class ReportResponse(BaseModel):
     content: str
     report_type: str = "compliance"
     generated_at: datetime
+    citations: list[Citation] = Field(default_factory=list)
+    confidence_score: float = 1.0
 
 
 class ReportListItem(BaseModel):

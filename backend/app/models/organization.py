@@ -76,3 +76,11 @@ class APIKey(Base):
         """
         raw = f"ctx_{secrets.token_urlsafe(42)}"
         return raw, raw[:12]
+
+class CAClientRelationship(Base):
+    __tablename__ = "ca_client_relationships"
+    id = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ca_org_id = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    client_org_id = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    managed_since = mapped_column(DateTime(timezone=True), server_default=func.now())
+    is_active = mapped_column(Boolean, default=True)

@@ -15,6 +15,8 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+
 from app.agents.ingestor import DocumentIngestorAgent
 from app.database import get_db
 from app.dependencies import get_org_namespace
@@ -54,12 +56,17 @@ async def upload_document(
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only PDF uploads are supported")
 
-    file_bytes = await file.read()
-    if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="PDF exceeds 100MB limit")
+    max_size = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
-    # Duplicate detection via content hash
+    # Chunked file reading to avoid memory exhaustion
+    file_bytes = bytearray()
+    while chunk := await file.read(8192):
+        file_bytes.extend(chunk)
+        if len(file_bytes) > max_size:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"PDF exceeds {settings.MAX_UPLOAD_SIZE_MB}MB limit")
+
     content_hash = hashlib.sha256(file_bytes).hexdigest()
+    
     existing = await db.execute(
         select(Document).where(
             Document.user_id == current_user.id,
@@ -73,7 +80,7 @@ async def upload_document(
             detail="A document with identical content has already been uploaded",
         )
 
-    tmp_dir = Path(tempfile.gettempdir()) / "cubitaxai_uploads"
+    tmp_dir = settings.upload_dir
     tmp_dir.mkdir(parents=True, exist_ok=True)
     file_path = tmp_dir / f"{uuid4().hex}.pdf"
     await asyncio.to_thread(file_path.write_bytes, file_bytes)

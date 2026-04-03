@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
+import DeadlineAlertBanner from "../components/dashboard/DeadlineAlertBanner";
 
 /* ── Animated counter ────────────────────────────────────────────── */
 function AnimatedNumber({ value, prefix = "", suffix = "", duration = 1200 }) {
@@ -205,6 +206,7 @@ export default function Dashboard() {
 
       {/* ── Content ──────────────────────────────────────────────── */}
       <main className="mx-auto max-w-[1440px] px-6 pb-16 pt-24">
+        <DeadlineAlertBanner />
         {/* Hero Row: Compliance Ring + Deadlines */}
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           {/* Compliance Score */}

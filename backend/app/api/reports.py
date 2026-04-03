@@ -83,7 +83,8 @@ async def generate_report(
     """Generate and persist a compliance report in the requested format."""
     request = payload or ReportRequest()
     writer = ReportWriterAgent()
-    content = await writer.generate_compliance_report(str(current_user.id))
+    result = await writer.generate_compliance_report(str(current_user.id))
+    content = result["content"]
     report_id = uuid4().hex
     report_path = settings.reports_dir / f"{report_id}.md"
     report_path.write_text(content, encoding="utf-8")
@@ -98,6 +99,8 @@ async def generate_report(
         content=content,
         report_type=request.report_type,
         generated_at=datetime.now(timezone.utc),
+        citations=result.get("citations", []),
+        confidence_score=result.get("confidence", 1.0),
     )
 
 

@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
 
@@ -8,7 +8,8 @@ import { useAuth } from "../../hooks/useAuth";
  * @returns {JSX.Element}
  */
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -20,6 +21,16 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  const isClient = user?.role === "client";
+  const path = location.pathname;
+
+  if (isClient && path.startsWith("/dashboard")) {
+    return <Navigate to="/portal" replace />;
+  }
+  if (!isClient && path.startsWith("/portal")) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

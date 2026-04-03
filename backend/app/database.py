@@ -41,6 +41,10 @@ async def init_db() -> None:
     import app.models.user  # noqa: F401
     import app.models.document  # noqa: F401
     import app.models.experiment  # noqa: F401
+    import app.models.deadline  # noqa: F401
+    import app.models.review  # noqa: F401
+    import app.models.integrations  # noqa: F401
+    import app.models.audit  # noqa: F401
     import app.memory.entity_memory  # noqa: F401
 
     async with engine.begin() as connection:

@@ -33,6 +33,10 @@ celery_app.conf.beat_schedule = {
         "task": "auto_tune_retrieval",
         "schedule": crontab(hour=2, minute=0, day_of_week=0),  # Sunday 2 AM
     },
+    "daily-deadline-sweep": {
+        "task": "deadline_sweep_task",
+        "schedule": crontab(hour=8, minute=0),  # Daily 8 AM
+    },
 }
 
 
@@ -95,3 +99,14 @@ def store_episodic_memory(user_id: str, session_id: str, messages: list[dict]) -
 
     doc_id = asyncio.run(_store())
     return {"status": "stored", "doc_id": doc_id or "skipped"}
+
+@celery_app.task(name="deadline_sweep_task")
+def deadline_sweep_task() -> dict[str, str]:
+    from app.services.deadline_service import DeadlineService
+    from app.database import AsyncSessionLocal
+    async def _sweep():
+        async with AsyncSessionLocal() as session:
+            service = DeadlineService()
+            await service.run_daily_sweep(session)
+    asyncio.run(_sweep())
+    return {"status": "success"}

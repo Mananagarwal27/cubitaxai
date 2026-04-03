@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "../hooks/useAuth";
 import AppShell from "../components/AppShell";
+import { Link } from "react-router-dom";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -58,6 +59,24 @@ export default function SettingsPage() {
             <h2 className="font-display text-lg font-bold">Security</h2>
           </div>
           <button className="btn-secondary text-sm">Change Password</button>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glow-card p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <Key className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-lg font-bold">TRACES Integration</h2>
+          </div>
+          <p className="text-sm text-text-secondary mb-4">
+            Connect TRACES Account
+          </p>
+          <div className="flex items-center gap-4 mb-4">
+            <span className="badge-neutral text-xs px-2 py-1">Status: Not Connected</span>
+            <button className="btn-primary text-sm px-4">Connect TRACES Account</button>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="btn-secondary text-sm px-4">Sync Now</button>
+            <button className="btn-secondary text-sm px-4 text-danger border-danger/30 hover:bg-danger/10">Disconnect</button>
+          </div>
         </motion.div>
       </div>
     </AppShell>

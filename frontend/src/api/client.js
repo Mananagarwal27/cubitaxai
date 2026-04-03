@@ -120,7 +120,6 @@ export const api = {
   // Documents
   uploadDocument: (formData, onProgress) =>
     apiClient.post("/api/upload/document", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
       onUploadProgress: onProgress,
       timeout: 120000,
     }),
