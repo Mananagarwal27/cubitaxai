@@ -11,13 +11,14 @@ export default function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({ full_name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", company_name: "", password: "", confirm: "" });
 
   function validate() {
     const e = {};
     if (!form.full_name.trim()) e.full_name = "Full name is required";
     if (!form.email) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email";
+    if (!form.company_name.trim()) e.company_name = "Company name is required";
     if (!form.password) e.password = "Password is required";
     else if (form.password.length < 8) e.password = "Minimum 8 characters";
     if (form.password !== form.confirm) e.confirm = "Passwords don't match";
@@ -29,7 +30,7 @@ export default function Register() {
     event.preventDefault();
     if (!validate()) return;
     try {
-      await register({ full_name: form.full_name, email: form.email, password: form.password });
+      await register({ full_name: form.full_name, email: form.email, company_name: form.company_name, password: form.password });
       toast.success("Account created!");
       navigate("/dashboard");
     } catch (error) {
@@ -40,6 +41,7 @@ export default function Register() {
   const fields = [
     { id: "full_name", label: "Full Name", type: "text", icon: User, placeholder: "John Doe", autoComplete: "name" },
     { id: "email", label: "Email", type: "email", icon: Mail, placeholder: "you@company.com", autoComplete: "email" },
+    { id: "company_name", label: "Company Name", type: "text", icon: ArrowRight, placeholder: "Acme Corp", autoComplete: "organization" },
     { id: "password", label: "Password", type: showPassword ? "text" : "password", icon: Lock, placeholder: "Min 8 characters", autoComplete: "new-password", toggle: true },
     { id: "confirm", label: "Confirm Password", type: showPassword ? "text" : "password", icon: Lock, placeholder: "Re-enter password", autoComplete: "new-password" },
   ];
