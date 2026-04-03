@@ -1,53 +1,23 @@
-/**
- * Render the CubitaxAI brand mark and wordmark.
- * @param {{ compact?: boolean, light?: boolean, className?: string }} props
- * @returns {JSX.Element}
- */
-export default function BrandLogo({ compact = false, light = false, className = "" }) {
-  const wordmarkClass = light ? "text-text-primary" : "text-[#132b62]";
-  const iconClass = compact ? "h-11 w-11" : "h-14 w-14";
-  const wordmarkSize = compact ? "text-[1.7rem]" : "text-[1.95rem]";
+import { Link } from "react-router-dom";
 
-  return (
-    <div className={`flex items-center gap-3 ${className}`.trim()}>
-      <svg
-        viewBox="0 0 72 72"
-        className={`${iconClass} shrink-0`}
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="cubeStroke" x1="10%" x2="90%" y1="10%" y2="90%">
-            <stop offset="0%" stopColor="#173566" />
-            <stop offset="48%" stopColor="#7c5cfc" />
-            <stop offset="100%" stopColor="#4fc4cf" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M36 6 58 19v34L36 66 14 53V19L36 6Z"
-          fill="none"
-          stroke="url(#cubeStroke)"
-          strokeWidth="4"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M24 23 36 16l12 7-12 7-12-7Z"
-          fill="none"
-          stroke="url(#cubeStroke)"
-          strokeWidth="4"
-          strokeLinejoin="round"
-        />
-        <path d="M24 23v17l12 8V30" fill="none" stroke="url(#cubeStroke)" strokeWidth="4" strokeLinejoin="round" />
-        <path d="M48 23v17l-12 8" fill="none" stroke="url(#cubeStroke)" strokeWidth="4" strokeLinejoin="round" />
-        <path d="M14 20l22 13 22-13" fill="none" stroke="#1e376d" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-      </svg>
-      <div className="flex items-baseline gap-0.5 whitespace-nowrap leading-none">
-        <span className={`${wordmarkSize} font-display font-extrabold tracking-[-0.05em] ${wordmarkClass}`}>
-          Cubitax
-        </span>
-        <span className={`bg-logo-gradient bg-clip-text ${wordmarkSize} font-display font-extrabold tracking-[-0.06em] text-transparent`}>
-          AI
-        </span>
+/**
+ * CubitaxAI brand mark — used in nav, login, and landing.
+ * @param {{ compact?: boolean, to?: string, className?: string }} props
+ */
+export default function BrandLogo({ compact = false, to = "/", className = "" }) {
+  const inner = (
+    <div className={`flex items-center gap-2.5 ${className}`.trim()}>
+      <div className={`flex items-center justify-center rounded-xl bg-accent/20 ${compact ? "h-8 w-8" : "h-10 w-10"}`}>
+        <div className={`rounded-md bg-accent ${compact ? "h-4 w-4" : "h-5 w-5"}`} />
       </div>
+      <span className={`font-display font-bold tracking-tight ${compact ? "text-lg" : "text-2xl"}`}>
+        Cubitax<span className="text-accent">AI</span>
+      </span>
     </div>
   );
+
+  if (to) {
+    return <Link to={to}>{inner}</Link>;
+  }
+  return inner;
 }

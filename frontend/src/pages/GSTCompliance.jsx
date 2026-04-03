@@ -1,102 +1,56 @@
-import { useQuery } from "@tanstack/react-query";
-import { CalendarRange, FileWarning } from "lucide-react";
-
-import { api } from "../api/client";
+import { motion } from "framer-motion";
+import { CheckCircle2, Receipt } from "lucide-react";
 import AppShell from "../components/AppShell";
 
-/**
- * Render the GST Compliance page.
- * @returns {JSX.Element}
- */
+const gstData = [
+  { form: "GSTR-1", period: "Mar 2026", status: "filed", amount: "₹4,12,000" },
+  { form: "GSTR-3B", period: "Mar 2026", status: "pending", amount: "₹1,89,400" },
+  { form: "GSTR-9", period: "FY 2025-26", status: "upcoming", amount: "—" },
+];
+
 export default function GSTCompliance() {
-  const deadlinesQuery = useQuery({ queryKey: ["deadlines"], queryFn: api.dashboard.getDeadlines });
-  const documentsQuery = useQuery({ queryKey: ["documents"], queryFn: api.upload.getDocuments });
-  const deadlines = (deadlinesQuery.data || []).filter((item) => item.filing_name.includes("GSTR"));
-  const documents = documentsQuery.data?.documents || [];
-
   return (
-    <AppShell
-      title="GST Compliance"
-      pageLabel="GST Compliance"
-      suggestions={[
-        "What GST evidence is missing?",
-        "Summarize this month’s GST cadence",
-        "Explain the next GSTR due date"
-      ]}
-      notificationCount={deadlines.length}
-    >
+    <AppShell title="GST Compliance">
       <div className="space-y-6">
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="surface-card overflow-hidden p-6">
-            <div className="rounded-[24px] bg-gradient-to-br from-purple/18 to-cyan/8 p-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">GST Compliance</p>
-              <h2 className="mt-3 max-w-2xl font-display text-4xl font-extrabold text-text-primary">
-                Organize GST evidence the way a real filing team needs it.
-              </h2>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-text-secondary">
-                Keep outward supplies, reconciliations, GSTR working papers, challans, and reference circulars inside
-                one consistent operating view.
-              </p>
-            </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { label: "Total GST Liability", value: "₹6,01,400", color: "accent" },
+            { label: "Filed This Quarter", value: "2 / 3", color: "mint" },
+            { label: "ITC Available", value: "₹1,45,200", color: "mint" },
+          ].map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glow-card p-5">
+              <p className="text-xs uppercase tracking-wider text-text-muted">{stat.label}</p>
+              <p className={`mt-2 font-display text-2xl font-bold text-${stat.color}`}>{stat.value}</p>
+            </motion.div>
+          ))}
+        </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-navy-border bg-navy px-5 py-5">
-                <p className="text-sm text-text-secondary">GST Deadlines Tracked</p>
-                <p className="mt-3 font-display text-4xl font-extrabold text-text-primary">{deadlines.length || 2}</p>
-              </div>
-              <div className="rounded-2xl border border-navy-border bg-navy px-5 py-5">
-                <p className="text-sm text-text-secondary">GST Returns Uploaded</p>
-                <p className="mt-3 font-display text-4xl font-extrabold text-purple-light">
-                  {documents.filter((document) => document.file_type === "GSTR").length}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-navy-border bg-navy px-5 py-5">
-                <p className="text-sm text-text-secondary">Reference Circulars</p>
-                <span className="mt-4 inline-flex rounded-full bg-red/15 px-3 py-1 text-xs font-semibold text-red">
-                  Missing
-                </span>
-              </div>
-            </div>
+        <div className="glow-card overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-border p-5">
+            <Receipt className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-lg font-bold">GST Returns</h2>
           </div>
-
-          <div className="surface-card p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-cyan/10 p-3 text-cyan">
-                <CalendarRange className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-text-muted">Monthly GST cadence</p>
-                <h2 className="mt-2 font-display text-3xl font-bold text-text-primary">Control the monthly cycle</h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              {[
-                "Week 1: reconcile outward supplies, e-invoices, e-way bills",
-                "Week 2: lock GSTR-1, vendor mismatch notes",
-                "Week 3: validate GSTR-2B, ITC conditions",
-                "Week 4: archive acknowledgements, challans"
-              ].map((item, index) => (
-                <div key={item} className="rounded-2xl border border-navy-border bg-navy px-4 py-4">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-purple/12 text-sm font-semibold text-purple-light">
-                      {index + 1}
-                    </div>
-                    <p className="text-sm leading-7 text-text-secondary">{item}</p>
-                  </div>
-                </div>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                {["Form", "Period", "Status", "Amount"].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {gstData.map(r => (
+                <tr key={`${r.form}-${r.period}`} className="border-b border-border/50 transition-colors hover:bg-surface-hover/50">
+                  <td className="px-5 py-3 text-sm font-semibold text-text-primary">{r.form}</td>
+                  <td className="px-5 py-3 text-sm text-text-secondary">{r.period}</td>
+                  <td className="px-5 py-3">
+                    <span className={`badge-${r.status === "filed" ? "success" : r.status === "pending" ? "warning" : "neutral"}`}>{r.status}</span>
+                  </td>
+                  <td className="px-5 py-3 font-mono text-sm text-text-primary">{r.amount}</td>
+                </tr>
               ))}
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-navy-border bg-navy px-4 py-4">
-              <div className="flex items-start gap-3">
-                <FileWarning className="mt-0.5 h-4 w-4 text-amber" />
-                <p className="text-sm leading-7 text-text-secondary">
-                  Upload GST circulars and filed returns to let the assistant cite both law and your own evidence.
-                </p>
-              </div>
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
       </div>
     </AppShell>

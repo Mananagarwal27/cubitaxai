@@ -67,6 +67,7 @@ async def register_user(payload: UserCreate, db: AsyncSession = Depends(get_db))
     refresh_token = create_refresh_token(str(user.id))
     user.refresh_token_hash = hash_token(refresh_token)
     await db.commit()
+    await db.refresh(user)
 
     return AuthResponse(
         access_token=access_token,
@@ -97,6 +98,7 @@ async def login_user(payload: UserLogin, db: AsyncSession = Depends(get_db)) -> 
     refresh_token = create_refresh_token(str(user.id))
     user.refresh_token_hash = hash_token(refresh_token)
     await db.commit()
+    await db.refresh(user)
 
     return AuthResponse(
         access_token=access_token,

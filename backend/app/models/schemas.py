@@ -69,7 +69,7 @@ class UserResponse(BaseModel):
     organization_id: UUID | None = None
     financial_year: str | None = None
     created_at: datetime
-    updated_at: datetime
+    updated_at: datetime | None = None
 
 
 class Token(BaseModel):

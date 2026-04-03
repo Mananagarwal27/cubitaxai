@@ -1,4 +1,11 @@
+# ──────────────────────────────────────────────────────────────────────
+# CubitaxAI — Docker Compose (Production)
+# Usage: docker compose --env-file .env.docker up -d --build
+# ──────────────────────────────────────────────────────────────────────
+
 services:
+  # ── Infrastructure ─────────────────────────────────────────────────
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -9,27 +16,29 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cubitax -d cubitax"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 3s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
 
   neo4j:
     image: neo4j:5-community
@@ -41,14 +50,14 @@ services:
       - "7474:7474"
       - "7687:7687"
     volumes:
-      - neo4j-data:/data
+      - neo4j_data:/data
     healthcheck:
       test: ["CMD", "neo4j", "status"]
       interval: 15s
       timeout: 10s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
 
   chromadb:
     image: chromadb/chroma:0.5.0
@@ -59,32 +68,30 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - chroma-data:/chroma/chroma
+      - chromadb_data:/chroma/chroma
     healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1').read()",
-        ]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1').read()"]
       interval: 15s
       timeout: 5s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
+
+  # ── Application Services ──────────────────────────────────────────
 
   backend:
     build:
       context: ./backend
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ./.env.docker
+    environment:
+      PYTHONPATH: /app
     ports:
       - "8000:8000"
     volumes:
-      - uploads-data:/app/uploads
-      - reports-data:/app/generated_reports
+      - uploads_data:/app/uploads
+      - reports_data:/app/generated_reports
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,19 +102,21 @@ services:
       chromadb:
         condition: service_started
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 5s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
 
   celery-worker:
     build:
       context: ./backend
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ./.env.docker
+    environment:
+      PYTHONPATH: /app
     command: celery -A app.tasks.celery_tasks.celery_app worker --loglevel=info --concurrency=4
     depends_on:
       postgres:
@@ -117,51 +126,54 @@ services:
       chromadb:
         condition: service_started
     volumes:
-      - uploads-data:/app/uploads
+      - uploads_data:/app/uploads
     networks:
-      - cubitax-network
+      - cubitax_net
 
   celery-beat:
     build:
       context: ./backend
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ./.env.docker
+    environment:
+      PYTHONPATH: /app
     command: celery -A app.tasks.celery_tasks.celery_app beat --loglevel=info
     depends_on:
       redis:
         condition: service_healthy
     networks:
-      - cubitax-network
+      - cubitax_net
 
   frontend:
     build:
       context: ./frontend
     restart: unless-stopped
-    env_file:
-      - ./.env
-    environment:
-      HOST: 0.0.0.0
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
       interval: 15s
       timeout: 5s
       retries: 5
     networks:
-      - cubitax-network
+      - cubitax_net
+
+# ── Volumes ──────────────────────────────────────────────────────────
 
 volumes:
-  postgres-data:
-  neo4j-data:
-  chroma-data:
-  uploads-data:
-  reports-data:
+  postgres_data:
+  redis_data:
+  neo4j_data:
+  chromadb_data:
+  uploads_data:
+  reports_data:
+
+# ── Networks ─────────────────────────────────────────────────────────
 
 networks:
-  cubitax-network:
-    name: cubitax-network
+  cubitax_net:
+    name: cubitax_net

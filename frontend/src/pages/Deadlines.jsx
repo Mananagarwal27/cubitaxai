@@ -1,78 +1,41 @@
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CalendarClock, CheckCircle2, Clock3 } from "lucide-react";
-
-import { api } from "../api/client";
+import { motion } from "framer-motion";
+import { Calendar, Clock } from "lucide-react";
 import AppShell from "../components/AppShell";
 
-/**
- * Render the deadlines page.
- * @returns {JSX.Element}
- */
+const deadlines = [
+  { name: "GSTR-1 Filing", form: "GSTR-1", date: "2026-04-11", daysLeft: 8, severity: "warning" },
+  { name: "GSTR-3B Filing", form: "GSTR-3B", date: "2026-04-20", daysLeft: 17, severity: "warning" },
+  { name: "TDS Q4 Return", form: "26Q", date: "2026-05-31", daysLeft: 58, severity: "success" },
+  { name: "ITR Filing", form: "ITR-6", date: "2026-10-31", daysLeft: 211, severity: "success" },
+  { name: "GST Annual Return", form: "GSTR-9", date: "2026-12-31", daysLeft: 272, severity: "success" },
+];
+
 export default function Deadlines() {
-  const deadlinesQuery = useQuery({ queryKey: ["deadlines"], queryFn: api.dashboard.getDeadlines });
-  const deadlines = deadlinesQuery.data || [];
-
-  const items = deadlines.length
-    ? deadlines
-    : [
-        { filing_name: "GSTR-1", due_date: "2026-04-11T00:00:00Z", urgency: "AMBER", status: "Due Soon" },
-        { filing_name: "GSTR-3B", due_date: "2026-04-20T00:00:00Z", urgency: "AMBER", status: "Due Soon" },
-        { filing_name: "TDS Deposit", due_date: "2026-04-07T00:00:00Z", urgency: "GREEN", status: "OK" }
-      ];
-
   return (
-    <AppShell
-      title="Deadlines"
-      pageLabel="Deadlines"
-      suggestions={[
-        "Which deadline is most urgent?",
-        "Explain the next GST due date",
-        "What is already overdue?"
-      ]}
-      notificationCount={items.length}
-    >
-      <div className="surface-card p-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-amber/10 p-3 text-amber">
-            <CalendarClock className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-text-muted">Compliance calendar</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-text-primary">Upcoming filing deadlines</h2>
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-3">
-          {items.map((deadline) => {
-            const Icon =
-              deadline.status === "Overdue" ? AlertTriangle : deadline.status === "Due Soon" ? Clock3 : CheckCircle2;
-            const toneClass =
-              deadline.status === "Overdue"
-                ? "bg-red/15 text-red"
-                : deadline.status === "Due Soon"
-                  ? "bg-amber/15 text-amber"
-                  : "bg-green/15 text-green";
-
-            return (
-              <div key={`${deadline.filing_name}-${deadline.due_date}`} className="flex items-center justify-between gap-4 rounded-2xl border border-navy-border bg-navy px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className={`rounded-full p-3 ${toneClass}`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-text-primary">{deadline.filing_name}</p>
-                    <p className="text-sm text-text-secondary">
-                      Due on {new Date(deadline.due_date).toLocaleDateString("en-IN")}
-                    </p>
-                  </div>
-                </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${toneClass}`}>
-                  {deadline.status}
-                </span>
+    <AppShell title="Deadlines">
+      <div className="max-w-3xl space-y-4">
+        {deadlines.map((dl, i) => (
+          <motion.div
+            key={dl.name}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06 }}
+            className="glow-card flex items-center justify-between p-5"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${dl.severity === "warning" ? "bg-warning/10" : "bg-mint/10"}`}>
+                <Calendar className={`h-5 w-5 ${dl.severity === "warning" ? "text-warning" : "text-mint"}`} />
               </div>
-            );
-          })}
-        </div>
+              <div>
+                <p className="text-sm font-semibold text-text-primary">{dl.name}</p>
+                <p className="text-xs text-text-muted">{dl.form} · Due {dl.date}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`badge-${dl.severity}`}>{dl.daysLeft} days left</span>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </AppShell>
   );

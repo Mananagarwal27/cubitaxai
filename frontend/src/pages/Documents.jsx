@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { FileUp, FolderOpen, UploadCloud } from "lucide-react";
+import { FileUp, FolderOpen, Trash2, UploadCloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
@@ -8,10 +8,6 @@ import toast from "react-hot-toast";
 import { api } from "../api/client";
 import AppShell from "../components/AppShell";
 
-/**
- * Render the documents workspace.
- * @returns {JSX.Element}
- */
 export default function Documents() {
   const documentsQuery = useQuery({ queryKey: ["documents"], queryFn: api.upload.getDocuments });
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -20,10 +16,7 @@ export default function Documents() {
 
   async function handleUpload(files) {
     const [file] = files;
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     setIsUploading(true);
     setUploadProgress(0);
     try {
@@ -39,104 +32,85 @@ export default function Documents() {
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "application/pdf": [".pdf"]
-    },
+    accept: { "application/pdf": [".pdf"] },
     multiple: false,
-    onDrop: handleUpload
+    onDrop: handleUpload,
   });
 
   useEffect(() => {
-    if (!documents.some((document) => document.status === "PROCESSING")) {
-      return undefined;
-    }
-
-    const interval = window.setInterval(() => {
-      documentsQuery.refetch();
-    }, 3000);
-    return () => window.clearInterval(interval);
+    if (!documents.some((d) => d.status === "PROCESSING")) return;
+    const interval = setInterval(() => documentsQuery.refetch(), 3000);
+    return () => clearInterval(interval);
   }, [documents, documentsQuery]);
 
   return (
-    <AppShell
-      title="Documents"
-      pageLabel="Documents"
-      suggestions={[
-        "What documents should I upload first?",
-        "Can you summarize my uploaded evidence?",
-        "What is missing from my filing pack?"
-      ]}
-    >
+    <AppShell title="Documents">
       <div className="space-y-6">
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="surface-card p-6">
+        {/* Upload zone */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="glow-card p-6">
           <div
             {...getRootProps()}
-            className={`rounded-[20px] border-2 border-dashed px-6 py-12 text-center ${
-              isDragActive ? "border-purple bg-purple/8" : "border-navy-border bg-navy/60"
+            className={`cursor-pointer rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
+              isDragActive ? "border-accent bg-accent/5" : "border-border bg-bg-tertiary/30"
             }`}
           >
             <input {...getInputProps()} />
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple/12 text-purple-light">
-              <UploadCloud className="h-7 w-7" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
+              <UploadCloud className="h-7 w-7 text-accent" />
             </div>
-            <h2 className="mt-5 font-display text-3xl font-bold text-text-primary">
-              Drag &amp; drop ITR, GSTR, Form 26AS, or circular PDFs
+            <h2 className="mt-5 font-display text-2xl font-bold">
+              Drag & drop your tax documents
             </h2>
-            <p className="mt-3 text-base leading-8 text-text-secondary">
-              Upload documents to ground retrieval and compliance answers in your own workspace data.
+            <p className="mt-2 text-sm text-text-secondary">
+              ITR, GSTR, Form 26AS, or circular PDFs — we parse and index everything.
             </p>
-            <div className="mt-6 inline-flex rounded-full border border-purple/30 bg-purple/10 px-4 py-2 text-sm font-semibold text-purple-light">
-              Browse files
+            <div className="mt-5">
+              <span className="btn-secondary text-xs">Browse files</span>
             </div>
-            {isUploading ? (
-              <div className="mx-auto mt-6 max-w-xl rounded-full bg-navy-border">
-                <div
-                  className="h-2 rounded-full bg-purple transition-all"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            ) : null}
-          </div>
-        </motion.div>
-
-        <div className="surface-card p-6">
-          <div className="flex items-center gap-3">
-            <FolderOpen className="h-5 w-5 text-text-secondary" />
-            <h2 className="font-display text-3xl font-bold text-text-primary">Workspace files</h2>
-          </div>
-
-          <div className="mt-6">
-            {documents.length ? (
-              <div className="space-y-3">
-                {documents.map((document) => (
-                  <div key={document.id} className="flex items-center justify-between gap-4 rounded-2xl border border-navy-border bg-navy px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-2xl bg-white/[0.04] p-3 text-text-secondary">
-                        <FileUp className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-text-primary">{document.filename}</p>
-                        <p className="text-sm text-text-muted">{document.file_type}</p>
-                      </div>
-                    </div>
-                    <span className="rounded-full border border-navy-border bg-navy-card px-3 py-1 text-xs font-semibold text-text-secondary">
-                      {document.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-navy-border bg-navy/60 px-6 py-12 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04] text-text-secondary">
-                  <FolderOpen className="h-6 w-6" />
-                </div>
-                <h3 className="mt-5 font-display text-2xl font-bold text-text-primary">No documents uploaded yet</h3>
-                <p className="mt-3 text-sm leading-7 text-text-secondary">
-                  Start with ITR, GSTR, Form 26AS, or key circular PDFs to improve every assistant response.
-                </p>
+            {isUploading && (
+              <div className="mx-auto mt-5 max-w-sm rounded-full bg-border overflow-hidden">
+                <div className="h-1.5 rounded-full bg-accent transition-all" style={{ width: `${uploadProgress}%` }} />
               </div>
             )}
           </div>
+        </motion.div>
+
+        {/* File list */}
+        <div className="glow-card p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <FolderOpen className="h-5 w-5 text-text-muted" />
+            <h2 className="font-display text-lg font-bold">Workspace files</h2>
+            <span className="badge-neutral ml-auto">{documents.length} docs</span>
+          </div>
+
+          {documents.length ? (
+            <div className="space-y-2">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-bg-tertiary/30 px-4 py-3 transition-colors hover:bg-surface-hover">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                      <FileUp className="h-4 w-4 text-accent" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text-primary">{doc.filename}</p>
+                      <p className="text-xs text-text-muted">{doc.file_type}</p>
+                    </div>
+                  </div>
+                  <span className={`badge-${doc.status === "INDEXED" ? "success" : doc.status === "PROCESSING" ? "warning" : "neutral"} shrink-0`}>
+                    {doc.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border px-6 py-14 text-center">
+              <FolderOpen className="mx-auto h-10 w-10 text-text-muted" />
+              <h3 className="mt-4 font-display text-lg font-bold">No documents yet</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Upload ITR, GSTR, or Form 26AS to ground every assistant response in your data.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </AppShell>
