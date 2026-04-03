@@ -15,7 +15,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useChat } from "../hooks/useChat";
 import { AgentBadge, SkeletonLoader } from "../components/ui";
 import apiClient from "../api/client";
