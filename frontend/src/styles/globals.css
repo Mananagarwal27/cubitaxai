@@ -242,7 +242,7 @@ body {
   @apply bg-transparent p-0;
 }
 .chat-markdown blockquote {
-  @apply border-l-3 border-accent pl-4 italic text-text-secondary mb-3;
+  @apply border-l-4 border-accent pl-4 italic text-text-secondary mb-3;
 }
 .chat-markdown a {
   @apply text-accent hover:text-accent-light underline;

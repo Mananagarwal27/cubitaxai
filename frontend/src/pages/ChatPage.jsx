@@ -15,10 +15,10 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
-import { useChat } from "../../hooks/useChat";
-import { AgentBadge, SkeletonLoader } from "../ui";
-import apiClient from "../../api/client";
+import { useAuth } from "../context/AuthContext";
+import { useChat } from "../hooks/useChat";
+import { AgentBadge, SkeletonLoader } from "../components/ui";
+import apiClient from "../api/client";
 
 /* ── Agent Activity Panel (right sidebar) ────────────────────────── */
 

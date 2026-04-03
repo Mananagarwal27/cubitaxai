@@ -6,6 +6,7 @@ import hashlib
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -196,12 +197,12 @@ async def list_api_keys(
     return [APIKeyResponse.model_validate(key) for key in result.scalars().all()]
 
 
-@router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/api-keys/{key_id}")
 async def revoke_api_key(
     key_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> Response:
     """Revoke (deactivate) an API key."""
 
     from uuid import UUID
@@ -217,3 +218,4 @@ async def revoke_api_key(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
     api_key.is_active = False
     await db.commit()
+    return Response(status_code=204)

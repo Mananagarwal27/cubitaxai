@@ -11,6 +11,7 @@ from uuid import UUID
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -127,12 +128,12 @@ async def get_document_status(
     return DocumentItem.model_validate(document)
 
 
-@router.delete("/documents/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/documents/{doc_id}")
 async def delete_document(
     doc_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> Response:
     """Soft-delete (archive) a document."""
 
     result = await db.execute(
@@ -143,3 +144,4 @@ async def delete_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
     document.status = DocumentStatus.ARCHIVED
     await db.commit()
+    return Response(status_code=204)

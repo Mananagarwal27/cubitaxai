@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -156,12 +157,12 @@ async def change_member_role(
     return UserResponse.model_validate(user)
 
 
-@router.delete("/team/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/team/{user_id}")
 async def remove_team_member(
     user_id: str,
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> Response:
     """Remove a member from the organization (admin only)."""
 
     if str(current_user.id) == user_id:
@@ -180,3 +181,4 @@ async def remove_team_member(
     user.organization_id = None
     user.is_active = False
     await db.commit()
+    return Response(status_code=204)
