@@ -14,10 +14,12 @@ async def seed_admin():
         
         if user:
             print("Admin user already exists.")
-            # Optionally update password here if needed
+            # Update password and ensure admin role
             user.hashed_password = get_password_hash("password123")
+            user.role = UserRole.ADMIN
+            user.full_name = "System Admin"
             await db.commit()
-            print("Admin password updated to 'password123'.")
+            print("Admin password updated to 'password123', role set to ADMIN.")
         else:
             admin = User(
                 id=uuid.uuid4(),
