@@ -24,7 +24,7 @@ class TaxRetrieverAgent:
         self,
         query: str,
         user_id: str,
-        doc_type_filter: str | None = None,
+        doc_type_filter: Optional[str] = None,
         bm25_weight: float = 0.45,
         dense_weight: float = 0.55,
         top_k: int = 20,

@@ -18,7 +18,7 @@ class QueryClassification:
     bm25_weight: float
     dense_weight: float
     skip_vector_search: bool = False
-    date_filter: str | None = None
+    date_filter: Optional[str] = None
 
 
 # Section reference patterns

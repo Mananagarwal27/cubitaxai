@@ -91,7 +91,7 @@ def create_app() -> FastAPI:
     # ── Middleware (order matters: last added = first executed) ────────
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
+        allow_origins=settings.allowed_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
@@ -185,7 +185,7 @@ def create_app() -> FastAPI:
             components.append(ComponentHealth(name="chromadb", status="degraded", message="Not configured"))
 
         # Cohere Reranker
-        if vs._cohere_client:
+        if vs.cohere_client:
             components.append(ComponentHealth(name="cohere_reranker", status="healthy"))
         else:
             components.append(ComponentHealth(name="cohere_reranker", status="degraded", message="Using lexical fallback"))

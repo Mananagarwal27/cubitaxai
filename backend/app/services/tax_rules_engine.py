@@ -82,8 +82,8 @@ class TaxRulesEngine:
         self,
         transaction_type: str,
         amount: float,
-        hsn_code: str | None,
-        state: str | None,
+        hsn_code: Optional[str],
+        state: Optional[str],
     ) -> dict[str, float]:
         """Calculate GST split into CGST/SGST or IGST."""
 

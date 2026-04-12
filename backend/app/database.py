@@ -14,13 +14,17 @@ class Base(AsyncAttrs, DeclarativeBase):
     """Base class for all SQLAlchemy declarative models."""
 
 
-engine = create_async_engine(
-    settings.async_database_url,
-    echo=settings.debug,
-    future=True,
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-)
+engine_kwargs: dict = {
+    "echo": settings.debug,
+    "future": True,
+}
+
+# SQLite doesn't support pool_size / max_overflow
+if settings.async_database_url.startswith("postgresql"):
+    engine_kwargs["pool_size"] = settings.DATABASE_POOL_SIZE
+    engine_kwargs["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
+
+engine = create_async_engine(settings.async_database_url, **engine_kwargs)
 AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
 

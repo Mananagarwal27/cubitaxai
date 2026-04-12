@@ -55,9 +55,9 @@ class ExperimentService:
         strategy: str,
         bm25_weight: float,
         dense_weight: float,
-        retrieval_latency_ms: float | None = None,
-        generation_latency_ms: float | None = None,
-        faithfulness_score: float | None = None,
+        retrieval_latency_ms: Optional[float] = None,
+        generation_latency_ms: Optional[float] = None,
+        faithfulness_score: Optional[float] = None,
     ) -> None:
         """Log a query with its retrieval strategy and metrics."""
         async with AsyncSessionLocal() as session:

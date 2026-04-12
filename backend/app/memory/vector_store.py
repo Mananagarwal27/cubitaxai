@@ -141,7 +141,7 @@ class VectorStoreManager:
         query: str,
         namespace: str,
         top_k: int = 20,
-        filter_dict: dict[str, Any] | None = None,
+        filter_dict: Optional[dict[str, Any]] = None,
         bm25_weight: float = 0.45,
         dense_weight: float = 0.55,
     ) -> list[SearchChunk]:

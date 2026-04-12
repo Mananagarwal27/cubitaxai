@@ -35,7 +35,7 @@ _metrics: dict[str, Any] = {
 }
 
 
-def increment_counter(name: str, amount: int = 1, org_id: str | None = None) -> None:
+def increment_counter(name: str, amount: int = 1, org_id: Optional[str] = None) -> None:
     """Increment a named counter metric."""
     _metrics["counters"][name] = _metrics["counters"].get(name, 0) + amount
     if org_id:

@@ -28,7 +28,7 @@ class EpisodicMemoryManager:
         user_id: str,
         session_id: str,
         messages: list[dict[str, Any]],
-    ) -> str | None:
+    ) -> Optional[str]:
         """Summarize a conversation and store as a memory chunk.
 
         Args:

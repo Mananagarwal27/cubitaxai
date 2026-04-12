@@ -104,7 +104,7 @@ class KnowledgeGraphService:
         # Fallback: keyword extraction + simple match
         return await self._keyword_graph_search(natural_query)
 
-    async def _generate_cypher(self, natural_query: str) -> str | None:
+    async def _generate_cypher(self, natural_query: str) -> Optional[str]:
         """Use LLM to generate a Cypher query from natural language."""
         try:
             from langchain_openai import ChatOpenAI

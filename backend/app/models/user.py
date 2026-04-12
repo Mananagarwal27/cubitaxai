@@ -1,6 +1,6 @@
 """User database model with RBAC and multi-tenancy support."""
+from typing import Optional
 
-from __future__ import annotations
 
 import enum
 import uuid
@@ -33,8 +33,8 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     company_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    pan_number: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    gstin: Mapped[str | None] = mapped_column(String(15), nullable=True)
+    pan_number: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    gstin: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     role: Mapped[UserRole] = mapped_column(
@@ -42,11 +42,11 @@ class User(Base):
         default=UserRole.ANALYST,
         nullable=False,
     )
-    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+    organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True
     )
-    refresh_token_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    financial_year: Mapped[str | None] = mapped_column(String(10), default="FY2025", nullable=True)
+    refresh_token_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    financial_year: Mapped[Optional[str]] = mapped_column(String(10), default="FY2025", nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

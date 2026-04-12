@@ -1,5 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum, Text
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
+from sqlalchemy import Column, String, DateTime, Enum, Text, JSON, UUID
 import uuid
 import enum
 from datetime import datetime
@@ -13,12 +12,12 @@ class ActionEnum(str, enum.Enum):
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    org_id = Column(PGUUID(as_uuid=True), nullable=True) # Sometimes actions are system-wide
-    user_id = Column(PGUUID(as_uuid=True), nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), nullable=True) # Sometimes actions are system-wide
+    user_id = Column(UUID(as_uuid=True), nullable=True)
     action = Column(Enum(ActionEnum))
     entity_name = Column(String)
     entity_id = Column(String)
-    changes = Column(JSONB, nullable=True)
+    changes = Column(JSON, nullable=True)
     ip_address = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)

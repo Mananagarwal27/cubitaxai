@@ -8,10 +8,10 @@ import { useAuth } from "../../hooks/useAuth";
  * @returns {JSX.Element}
  */
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isBootLoading, user } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (isBootLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple border-t-transparent" />

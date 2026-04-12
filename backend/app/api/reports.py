@@ -77,7 +77,7 @@ def _markdown_to_docx(markdown_text: str, docx_path: Path) -> None:
 
 @router.post("/generate", response_model=ReportResponse)
 async def generate_report(
-    payload: ReportRequest | None = None,
+    payload: Optional[ReportRequest] = None,
     current_user: User = Depends(get_current_user),
 ) -> ReportResponse:
     """Generate and persist a compliance report in the requested format."""

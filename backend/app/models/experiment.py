@@ -1,6 +1,6 @@
 """A/B testing models for retrieval strategy experiments."""
+from typing import Optional
 
-from __future__ import annotations
 
 import uuid
 from datetime import datetime
@@ -19,7 +19,7 @@ class ExperimentFlag(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
     variant: Mapped[str] = mapped_column(String(50), nullable=False)
-    user_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    user_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -34,15 +34,15 @@ class QueryLog(Base):
     __tablename__ = "query_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    user_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     query_type: Mapped[str] = mapped_column(String(50), nullable=False)
     strategy_used: Mapped[str] = mapped_column(String(100), nullable=False)
     bm25_weight: Mapped[float] = mapped_column(Float, default=0.45, nullable=False)
     dense_weight: Mapped[float] = mapped_column(Float, default=0.55, nullable=False)
-    retrieval_latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
-    generation_latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
-    faithfulness_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    retrieval_latency_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    generation_latency_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    faithfulness_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     follow_up_correction: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

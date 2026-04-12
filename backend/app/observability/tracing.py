@@ -47,7 +47,7 @@ def get_tracer():
 
 
 @contextmanager
-def trace_agent_step(step_name: str, attributes: dict[str, Any] | None = None) -> Generator[Any, None, None]:
+def trace_agent_step(step_name: str, attributes: Optional[dict[str, Any]] = None) -> Generator[Any, None, None]:
     """Context manager that wraps a LangGraph agent step in a trace span.
 
     Usage:

@@ -57,7 +57,7 @@ def configure_logging(json_output: bool = True) -> None:
         logging.getLogger(noisy_logger).setLevel(logging.WARNING)
 
 
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
     """Get a structured logger instance."""
     return structlog.get_logger(name)
 

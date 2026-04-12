@@ -8,7 +8,7 @@ from typing import Sequence
 from app.config import settings
 
 
-def _has_real_api_key(value: str | None) -> bool:
+def _has_real_api_key(value: Optional[str]) -> bool:
     """Return True only when an API key looks intentionally configured."""
 
     if not value:

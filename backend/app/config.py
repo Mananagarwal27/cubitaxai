@@ -99,14 +99,17 @@ class Settings(BaseSettings):
     RATE_LIMIT_UPLOAD: str = "10/minute"
 
     # ── CORS ─────────────────────────────────────────────
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
     # ── ChromaDB ─────────────────────────────────────────
     CHROMA_HOST: str = "chromadb"
     CHROMA_PORT: int = 8000
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            Path(__file__).resolve().parent.parent / ".env",        # backend/.env
+            Path(__file__).resolve().parent.parent.parent / ".env", # project-root/.env
+        ),
         case_sensitive=True,
         extra="ignore"
     )
@@ -121,8 +124,9 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL")
     @classmethod
     def validate_db_url(cls, v: str) -> str:
-        if not v.startswith("postgresql+asyncpg://"):
-            raise ValueError("DATABASE_URL must use postgresql+asyncpg:// scheme")
+        valid_schemes = ("postgresql+asyncpg://", "sqlite+aiosqlite://")
+        if not any(v.startswith(scheme) for scheme in valid_schemes):
+            raise ValueError("DATABASE_URL must use postgresql+asyncpg:// or sqlite+aiosqlite:// scheme")
         return v
 
     # ── Lowercase property accessors ─────────────────────
@@ -158,8 +162,9 @@ class Settings(BaseSettings):
         return self.ACCESS_TOKEN_EXPIRE_MINUTES
 
     @property
-    def allowed_origins(self) -> List[str]:
-        return self.CORS_ORIGINS
+    def allowed_origins(self) -> list[str]:
+        """Parse CORS_ORIGINS from comma-separated string."""
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     @property
     def debug(self) -> bool:

@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
     }
   });
   const [loading, setLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     setError(null);
+    setLoginLoading(true);
     try {
       const res = await api.login({ email, password });
       const { access_token, refresh_token, user: userData } = res.data;
@@ -45,14 +47,17 @@ export function AuthProvider({ children }) {
       setUser(userData);
       return userData;
     } catch (err) {
-      const msg = err.response?.data?.detail || "Login failed";
+      const msg = err.response?.data?.detail || "Login failed. Please check your credentials.";
       setError(msg);
       throw new Error(msg);
+    } finally {
+      setLoginLoading(false);
     }
   }, []);
 
   const register = useCallback(async (data) => {
     setError(null);
+    setLoginLoading(true);
     try {
       const res = await api.register(data);
       const { access_token, refresh_token, user: userData } = res.data;
@@ -65,6 +70,8 @@ export function AuthProvider({ children }) {
       const msg = err.response?.data?.detail || "Registration failed";
       setError(msg);
       throw new Error(msg);
+    } finally {
+      setLoginLoading(false);
     }
   }, []);
 
@@ -79,7 +86,8 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loading,
-      isLoading: loading,
+      isLoading: loginLoading,
+      isBootLoading: loading,
       isAuthenticated: !!user,
       error,
       login,
@@ -87,7 +95,7 @@ export function AuthProvider({ children }) {
       logout,
       setUser,
     }),
-    [user, loading, error, login, register, logout]
+    [user, loading, loginLoading, error, login, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

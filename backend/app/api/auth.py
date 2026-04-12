@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
@@ -128,9 +129,9 @@ async def get_profile(current_user: User = Depends(get_current_user)) -> UserRes
 
 @router.put("/me", response_model=UserResponse)
 async def update_profile(
-    full_name: str | None = None,
-    pan_number: str | None = None,
-    financial_year: str | None = None,
+    full_name: Optional[str] = None,
+    pan_number: Optional[str] = None,
+    financial_year: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:

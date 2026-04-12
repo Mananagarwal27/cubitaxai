@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -20,14 +20,14 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=255)
     email: EmailStr
     company_name: str = Field(min_length=2, max_length=255)
-    pan_number: str | None = Field(default=None)
-    gstin: str | None = Field(default=None)
+    pan_number: Optional[str] = Field(default=None)
+    gstin: Optional[str] = Field(default=None)
     password: str = Field(min_length=8, max_length=128)
     role: UserRole = Field(default=UserRole.ANALYST)
 
     @field_validator("pan_number")
     @classmethod
-    def validate_pan(cls, value: str | None) -> str | None:
+    def validate_pan(cls, value: Optional[str]) -> str | None:
         """Validate PAN format when provided."""
         if value and len(value) == 10 and value[:5].isalpha() and value[5:9].isdigit() and value[9].isalpha():
             return value.upper()
@@ -37,7 +37,7 @@ class UserCreate(BaseModel):
 
     @field_validator("gstin")
     @classmethod
-    def validate_gstin(cls, value: str | None) -> str | None:
+    def validate_gstin(cls, value: Optional[str]) -> str | None:
         """Validate GSTIN format when provided."""
         if value and len(value) == 15 and value.isalnum():
             return value.upper()
@@ -62,14 +62,14 @@ class UserResponse(BaseModel):
     email: EmailStr
     full_name: str
     company_name: str
-    pan_number: str | None
-    gstin: str | None
+    pan_number: Optional[str]
+    gstin: Optional[str]
     is_active: bool
     role: UserRole
-    organization_id: UUID | None = None
-    financial_year: str | None = None
+    organization_id: Optional[UUID] = None
+    financial_year: Optional[str] = None
     created_at: datetime
-    updated_at: datetime | None = None
+    updated_at: Optional[datetime] = None
 
 
 class Token(BaseModel):
@@ -82,10 +82,10 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Decoded token claims required for user lookup."""
 
-    sub: str | None = None
+    sub: Optional[str] = None
     email: EmailStr | None = None
-    role: str | None = None
-    org_id: str | None = None
+    role: Optional[str] = None
+    org_id: Optional[str] = None
 
 
 class AuthResponse(Token):
@@ -148,8 +148,8 @@ class APIKeyResponse(BaseModel):
     name: str
     key_prefix: str
     is_active: bool
-    last_used_at: datetime | None
-    expires_at: datetime | None
+    last_used_at: Optional[datetime]
+    expires_at: Optional[datetime]
     created_at: datetime
 
 
@@ -187,13 +187,13 @@ class DocumentItem(BaseModel):
     status: DocumentStatus
     chunk_count: int
     pinecone_namespace: str
-    financial_year: str | None = None
+    financial_year: Optional[str] = None
     version: int = 1
-    content_hash: str | None = None
+    content_hash: Optional[str] = None
     uploaded_at: datetime
-    indexed_at: datetime | None
-    effective_from: datetime | None = None
-    effective_to: datetime | None = None
+    indexed_at: Optional[datetime]
+    effective_from: Optional[datetime] = None
+    effective_to: Optional[datetime] = None
 
 
 class DocumentListResponse(BaseModel):
@@ -219,7 +219,7 @@ class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
     content: str
     citations: list[Citation] = Field(default_factory=list)
-    agent: str | None = None
+    agent: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -237,10 +237,10 @@ class ChatResponse(BaseModel):
     citations: list[Citation]
     query_type: str
     session_id: str
-    agent: str | None = None
+    agent: Optional[str] = None
     needs_review: bool = False
-    plan: dict[str, Any] | None = None
-    critique_scores: dict[str, float] | None = None
+    plan: Optional[dict[str, Any]] = None
+    critique_scores: Optional[dict[str, float]] = None
 
 
 # ── Dashboard ────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ class DeadlineItem(BaseModel):
     days_remaining: int
     urgency: Literal["RED", "AMBER", "GREEN"]
     status: str
-    section_ref: str | None = None
+    section_ref: Optional[str] = None
 
 
 class ComplianceAlert(BaseModel):
@@ -262,7 +262,7 @@ class ComplianceAlert(BaseModel):
     title: str
     severity: Literal["low", "medium", "high"]
     description: str
-    due_date: datetime | None = None
+    due_date: Optional[datetime] = None
 
 
 class DashboardMetrics(BaseModel):
@@ -325,8 +325,8 @@ class ComponentHealth(BaseModel):
 
     name: str
     status: Literal["healthy", "degraded", "down"]
-    latency_ms: float | None = None
-    message: str | None = None
+    latency_ms: Optional[float] = None
+    message: Optional[str] = None
 
 
 class HealthResponse(BaseModel):

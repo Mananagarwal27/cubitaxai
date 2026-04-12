@@ -34,7 +34,7 @@ def _vector_store(request: Request) -> VectorStoreManager:
     return request.app.state.vector_store
 
 
-async def _resolve_stream_user(request: Request, db: AsyncSession, token: str | None) -> User:
+async def _resolve_stream_user(request: Request, db: AsyncSession, token: Optional[str]) -> User:
     """Resolve a user for SSE streaming via header or query token."""
     header = request.headers.get("authorization", "")
     bearer_token = header.removeprefix("Bearer ").strip() if header.startswith("Bearer ") else token
@@ -98,7 +98,7 @@ async def stream_chat_message(
     request: Request,
     query: str = Query(..., min_length=2),
     session_id: str = Query(..., min_length=3),
-    token: str | None = Query(default=None),
+    token: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> EventSourceResponse:
     """Stream a chat response with agent step events over SSE."""

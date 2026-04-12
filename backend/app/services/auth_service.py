@@ -7,7 +7,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -40,7 +40,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # ── JWT Access Tokens ─────────────────────────────────────────────────────
 
-def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
+def create_access_token(data: dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Create a signed JWT access token."""
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
@@ -122,7 +122,7 @@ async def rotate_refresh_token(
 # ── Current User Resolution ─────────────────────────────────────────────
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Resolve the currently authenticated user from the bearer token."""
@@ -179,7 +179,7 @@ def require_roles(*allowed_roles: UserRole):
 async def validate_api_key(
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> User | None:
+) -> Optional[User]:
     """Validate an API key from the X-API-Key header and return the owning user.
 
     Falls back to None if no API key header is present (bearer auth can take over).
@@ -209,7 +209,7 @@ async def validate_api_key(
 
 async def get_current_user_or_api_key(
     request: Request,
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Resolve user from either Bearer token or X-API-Key header."""
