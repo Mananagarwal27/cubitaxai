@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import re
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass
@@ -12,6 +13,11 @@ from typing import Any
 
 from app.config import settings
 from app.services.embedder import EmbeddingService, _has_real_api_key
+
+try:  # pragma: no cover - optional BM25 dependency
+    from rank_bm25 import BM25Okapi
+except Exception:  # pragma: no cover
+    BM25Okapi = None
 
 logger = logging.getLogger(__name__)
 
@@ -109,32 +115,99 @@ class VectorStoreManager:
 
         return len(chunks)
 
+    @staticmethod
+    def _tokenize(text: str) -> list[str]:
+        """Simple whitespace + lowercased tokenizer for BM25."""
+        return re.findall(r"\w+", text.lower())
+
+    @staticmethod
+    def _rrf_fuse(
+        *ranked_lists: list[tuple[str, SearchChunk]],
+        k: int = 60,
+    ) -> dict[str, float]:
+        """Reciprocal Rank Fusion across multiple ranked result lists.
+
+        Each entry in a ranked_list is (chunk_id, SearchChunk).
+        Returns a dict mapping chunk_id → fused score.
+        """
+        fused_scores: dict[str, float] = defaultdict(float)
+        for ranked in ranked_lists:
+            for rank, (chunk_id, _chunk) in enumerate(ranked, start=1):
+                fused_scores[chunk_id] += 1.0 / (k + rank)
+        return dict(fused_scores)
+
     async def hybrid_search(
         self,
         query: str,
         namespace: str,
         top_k: int = 20,
         filter_dict: dict[str, Any] | None = None,
+        bm25_weight: float = 0.45,
+        dense_weight: float = 0.55,
     ) -> list[SearchChunk]:
-        """Run a dense-plus-lexical search for the requested namespace."""
+        """Run dense + BM25 lexical search with Reciprocal Rank Fusion.
+
+        Args:
+            bm25_weight: Weight for BM25 scores in the final fusion.
+            dense_weight: Weight for dense vector scores in the final fusion.
+        """
 
         query_embedding = await asyncio.to_thread(self.embedding_service.embed_query, query)
-        lexical_terms = set(query.lower().split())
-        combined_scores: dict[str, SearchChunk] = {}
+        query_tokens = self._tokenize(query)
 
-        for record in self._local_store.get(namespace, []):
-            if filter_dict and any(record["metadata"].get(key) != value for key, value in filter_dict.items()):
-                continue
-            lexical_score = len(lexical_terms.intersection(record["text"].lower().split()))
-            dense_score = self._cosine_similarity(query_embedding, record["embedding"])
-            score = dense_score + lexical_score * 0.15
-            combined_scores[record["id"]] = SearchChunk(
+        # Collect all candidate chunks keyed by id
+        all_chunks: dict[str, SearchChunk] = {}
+
+        # ── Local store dense + BM25 ─────────────────────────────────
+        local_records = [
+            rec for rec in self._local_store.get(namespace, [])
+            if not filter_dict or all(rec["metadata"].get(k) == v for k, v in filter_dict.items())
+        ]
+
+        # Dense scoring from local store
+        dense_local: list[tuple[str, SearchChunk]] = []
+        for record in local_records:
+            score = self._cosine_similarity(query_embedding, record["embedding"])
+            chunk = SearchChunk(
                 id=record["id"],
                 text=record["text"],
                 metadata=record["metadata"],
                 score=score,
             )
+            all_chunks[record["id"]] = chunk
+            dense_local.append((record["id"], chunk))
+        dense_local.sort(key=lambda x: x[1].score, reverse=True)
 
+        # BM25 scoring from local store
+        bm25_local: list[tuple[str, SearchChunk]] = []
+        if local_records and BM25Okapi and query_tokens:
+            corpus = [self._tokenize(rec["text"]) for rec in local_records]
+            bm25 = BM25Okapi(corpus)
+            bm25_scores = bm25.get_scores(query_tokens)
+            for idx, bm25_score in enumerate(bm25_scores):
+                rec = local_records[idx]
+                chunk = all_chunks.get(rec["id"]) or SearchChunk(
+                    id=rec["id"], text=rec["text"], metadata=rec["metadata"], score=0.0,
+                )
+                bm25_local.append((rec["id"], SearchChunk(
+                    id=chunk.id, text=chunk.text, metadata=chunk.metadata, score=float(bm25_score),
+                )))
+            bm25_local.sort(key=lambda x: x[1].score, reverse=True)
+        elif local_records and query_tokens:
+            # Fallback: simple term overlap when rank_bm25 is unavailable
+            query_set = set(query_tokens)
+            for rec in local_records:
+                overlap = len(query_set.intersection(self._tokenize(rec["text"])))
+                chunk = all_chunks.get(rec["id"]) or SearchChunk(
+                    id=rec["id"], text=rec["text"], metadata=rec["metadata"], score=0.0,
+                )
+                bm25_local.append((rec["id"], SearchChunk(
+                    id=chunk.id, text=chunk.text, metadata=chunk.metadata, score=float(overlap),
+                )))
+            bm25_local.sort(key=lambda x: x[1].score, reverse=True)
+
+        # ── Pinecone dense search ────────────────────────────────────
+        pinecone_ranked: list[tuple[str, SearchChunk]] = []
         if self.index:
             try:
                 response = await asyncio.to_thread(
@@ -147,20 +220,20 @@ class VectorStoreManager:
                 )
                 for match in getattr(response, "matches", []):
                     metadata = dict(getattr(match, "metadata", {}) or {})
-                    current = combined_scores.get(match.id)
                     score = float(getattr(match, "score", 0.0))
-                    if current:
-                        current.score = max(current.score, score + current.score)
-                    else:
-                        combined_scores[match.id] = SearchChunk(
-                            id=match.id,
-                            text=metadata.get("text", ""),
-                            metadata=metadata,
-                            score=score,
-                )
+                    chunk = SearchChunk(
+                        id=match.id,
+                        text=metadata.get("text", ""),
+                        metadata=metadata,
+                        score=score,
+                    )
+                    all_chunks[match.id] = chunk
+                    pinecone_ranked.append((match.id, chunk))
             except Exception as exc:  # pragma: no cover - external service path
                 logger.warning("Pinecone query failed for namespace %s: %s", namespace, exc)
 
+        # ── Chroma dense search ───────────────────────────────────────
+        chroma_ranked: list[tuple[str, SearchChunk]] = []
         if self._chroma_client:
             try:
                 collection = self._chroma_client.get_or_create_collection(namespace)
@@ -177,24 +250,45 @@ class VectorStoreManager:
                 distances = chroma_response.get("distances", [[]])[0]
 
                 for chunk_id, text, metadata, distance in zip(ids, documents, metadatas, distances, strict=False):
-                    lexical_score = len(lexical_terms.intersection((text or "").lower().split()))
                     similarity_score = max(0.0, 1.0 - float(distance or 0.0))
-                    score = similarity_score + lexical_score * 0.15
-                    current = combined_scores.get(chunk_id)
-                    if current:
-                        current.score = max(current.score, score)
-                    else:
-                        combined_scores[chunk_id] = SearchChunk(
-                            id=chunk_id,
-                            text=text or "",
-                            metadata=dict(metadata or {}),
-                            score=score,
-                        )
+                    chunk = SearchChunk(
+                        id=chunk_id,
+                        text=text or "",
+                        metadata=dict(metadata or {}),
+                        score=similarity_score,
+                    )
+                    all_chunks.setdefault(chunk_id, chunk)
+                    chroma_ranked.append((chunk_id, chunk))
             except Exception as exc:  # pragma: no cover - service-dependent
                 logger.warning("Chroma query failed for namespace %s: %s", namespace, exc)
 
-        ordered = sorted(combined_scores.values(), key=lambda item: item.score, reverse=True)
-        return ordered[:top_k]
+        # ── Reciprocal Rank Fusion ────────────────────────────────────
+        # Build weighted RRF from dense lists and BM25 list
+        dense_lists = [l for l in (dense_local, pinecone_ranked, chroma_ranked) if l]
+        bm25_lists = [bm25_local] if bm25_local else []
+
+        # Apply per-list RRF then weight by dense_weight / bm25_weight
+        final_scores: dict[str, float] = defaultdict(float)
+        for ranked_list in dense_lists:
+            for rank, (chunk_id, _) in enumerate(ranked_list[:top_k * 2], start=1):
+                final_scores[chunk_id] += dense_weight / (60 + rank)
+        for ranked_list in bm25_lists:
+            for rank, (chunk_id, _) in enumerate(ranked_list[:top_k * 2], start=1):
+                final_scores[chunk_id] += bm25_weight / (60 + rank)
+
+        # Produce final sorted list
+        ordered_ids = sorted(final_scores, key=final_scores.get, reverse=True)
+        result: list[SearchChunk] = []
+        for chunk_id in ordered_ids[:top_k]:
+            if chunk_id in all_chunks:
+                chunk = all_chunks[chunk_id]
+                result.append(SearchChunk(
+                    id=chunk.id,
+                    text=chunk.text,
+                    metadata=chunk.metadata,
+                    score=final_scores[chunk_id],
+                ))
+        return result
 
     async def rerank(self, query: str, documents: list[SearchChunk]) -> list[SearchChunk]:
         """Rerank documents using Cohere when available, else lexical fallback."""

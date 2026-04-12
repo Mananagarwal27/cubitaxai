@@ -13,8 +13,11 @@ from app.agents.compliance_checker import ComplianceCheckerAgent
 from app.agents.retriever import TaxRetrieverAgent
 from app.memory.vector_store import VectorStoreManager
 from app.models.schemas import Citation
+from app.observability.logging import get_logger
 from app.observability.tracing import trace_agent_step
 from app.services.query_classifier import QueryClassifier, QueryClassification
+
+logger = get_logger("orchestrator")
 
 
 QueryType = Literal["TAX_QUESTION", "COMPLIANCE_CHECK", "CALCULATION", "DOCUMENT_QUERY", "GENERAL"]
@@ -102,6 +105,7 @@ class CubitaxOrchestrator:
             }
 
             elapsed = time.time() - start
+            logger.info("planning_completed", query_type=query_type, category=classification.category, confidence=classification.confidence, elapsed=round(elapsed, 3))
             return {
                 **state,
                 "query_type": query_type,
@@ -124,10 +128,15 @@ class CubitaxOrchestrator:
         """Retrieve knowledge and document context for the query."""
         with trace_agent_step("retriever_node", {"query_type": state.get("query_type")}):
             start = time.time()
+            classification = state.get("classification", {})
+            bm25_w = classification.get("bm25_weight", 0.45)
+            dense_w = classification.get("dense_weight", 0.55)
             chunks = await self.retriever.retrieve(
                 query=state["query"],
                 user_id=state["user_id"],
                 doc_type_filter=None,
+                bm25_weight=bm25_w,
+                dense_weight=dense_w,
             )
             citations = [citation.model_dump() for citation in self.retriever.to_citations(chunks)]
 
@@ -146,6 +155,7 @@ class CubitaxOrchestrator:
                     pass
 
             elapsed = time.time() - start
+            logger.info("retrieval_completed", chunks=len(chunks), citations=len(citations), graph_ctx=len(graph_context), elapsed=round(elapsed, 3))
             return {
                 **state,
                 "retrieved_chunks": [
@@ -174,6 +184,7 @@ class CubitaxOrchestrator:
                     break
 
             elapsed = time.time() - start
+            logger.info("calculation_completed", calc_type=calculation.get("calculation_type"), needs_review=needs_review, elapsed=round(elapsed, 3))
             return {
                 **state,
                 "calculations": calculation,
@@ -252,6 +263,7 @@ class CubitaxOrchestrator:
                 answer_parts.insert(0, "⚠️ **This response involves amounts exceeding ₹10 lakhs and should be reviewed by a Chartered Accountant.**\n")
 
             elapsed = time.time() - start
+            logger.info("synthesis_completed", answer_len=len("\n\n".join(part for part in answer_parts if part)), needs_review=state.get("needs_review"), elapsed=round(elapsed, 3))
             return {
                 **state,
                 "final_answer": "\n\n".join(part for part in answer_parts if part),
@@ -262,10 +274,11 @@ class CubitaxOrchestrator:
     # ── Critic Node ──────────────────────────────────────────────────
 
     async def critic_node(self, state: OrchestratorState) -> OrchestratorState:
-        """Score the answer on completeness, citation quality, and accuracy."""
+        """Score the answer on completeness, citation quality, accuracy, and faithfulness."""
         with trace_agent_step("critic_node"):
             retrieved_count = len(state.get("retrieved_chunks", []))
             citations_count = len(state.get("citations", []))
+            retrieved_chunks = state.get("retrieved_chunks", [])
 
             # Completeness score
             completeness = min(1.0, 0.3 + retrieved_count * 0.12 + citations_count * 0.08)
@@ -280,13 +293,32 @@ class CubitaxOrchestrator:
             # Calculation accuracy (high for deterministic engine)
             calc_accuracy = 0.95 if state.get("calculations") else 0.5
 
-            confidence = (completeness * 0.4 + citation_quality * 0.3 + calc_accuracy * 0.3)
+            # Faithfulness check against retrieved context
+            faithfulness = 0.5
+            try:
+                from app.services.faithfulness_filter import FaithfulnessFilter
+                ff = FaithfulnessFilter()
+                faithfulness = await ff.score(
+                    query=state["query"],
+                    answer=state.get("final_answer", ""),
+                    context_chunks=retrieved_chunks,
+                )
+            except Exception:
+                pass  # Graceful degradation if filter fails
+
+            confidence = (
+                completeness * 0.30
+                + citation_quality * 0.25
+                + calc_accuracy * 0.25
+                + faithfulness * 0.20
+            )
             confidence = min(1.0, confidence)
 
             critique_scores = {
                 "completeness": round(completeness, 2),
                 "citation_quality": round(citation_quality, 2),
                 "calculation_accuracy": round(calc_accuracy, 2),
+                "faithfulness": round(faithfulness, 2),
                 "overall": round(confidence, 2),
             }
 
@@ -295,6 +327,7 @@ class CubitaxOrchestrator:
 
             # Flag for CA review if critic uncertain
             needs_review = state.get("needs_review", False) or (confidence < 0.5 and state["query_type"] != "GENERAL")
+            logger.info("critic_completed", confidence=round(confidence, 2), faithfulness=round(faithfulness, 2), should_retry=should_retry, needs_review=needs_review)
 
             if should_retry:
                 return {

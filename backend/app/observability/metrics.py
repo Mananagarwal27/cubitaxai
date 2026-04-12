@@ -113,6 +113,5 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
         if request.url.path.startswith("/api/chat"):
             record_histogram("query_latency_seconds", duration)
-            increment_counter("total_queries")
 
         return response

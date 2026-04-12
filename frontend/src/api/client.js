@@ -122,6 +122,7 @@ export const api = {
     apiClient.post("/api/upload/document", formData, {
       onUploadProgress: onProgress,
       timeout: 120000,
+      headers: { "Content-Type": undefined },
     }),
   listDocuments: () => apiClient.get("/api/upload/documents"),
   deleteDocument: (id) => apiClient.delete(`/api/upload/documents/${id}`),

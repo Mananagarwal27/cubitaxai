@@ -14,8 +14,9 @@ from app.memory.vector_store import VectorStoreManager
 from app.models.document import Document, DocumentStatus, DocumentType
 from app.services.chunker import chunk_tax_document
 from app.services.pdf_parser import parse_pdf
+from app.observability.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DocumentIngestorAgent:
@@ -46,9 +47,10 @@ class DocumentIngestorAgent:
                 document.pinecone_namespace = namespace
                 document.indexed_at = datetime.now(timezone.utc)
                 await session.commit()
+            logger.info("document_ingested", doc_id=doc_id, user_id=user_id, chunk_count=chunk_count, doc_type=parsed_doc.get("doc_type"))
             return {"status": DocumentStatus.INDEXED.value, "chunk_count": chunk_count}
         except Exception as exc:
-            logger.exception("Document ingestion failed for %s", doc_id)
+            logger.error("document_ingestion_failed", doc_id=doc_id, user_id=user_id, error=str(exc), exc_info=True)
             async with AsyncSessionLocal() as session:
                 result = await session.execute(select(Document).where(Document.id == uuid.UUID(doc_id)))
                 document = result.scalar_one_or_none()

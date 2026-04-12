@@ -13,7 +13,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-celery_app = Celery("cubitaxai", broker=settings.redis_url, backend=settings.redis_url)
+celery_app = Celery("cubitaxai", broker=settings.celery_broker_url, backend=settings.celery_result_backend)
 
 celery_app.conf.update(
     task_serializer="json",

@@ -207,11 +207,12 @@ async def list_sessions(
     """List all chat sessions for the current user (from Redis keys)."""
     memory = _memory(request)
     sessions: list[dict[str, str]] = []
+    user_id = str(current_user.id)
 
     if memory.client:
-        keys = await memory.client.keys(f"chat:*")
+        keys = await memory.client.keys(f"chat:{user_id}:*")
         for key in keys[:50]:
-            session_id = key.replace("chat:", "")
+            session_id = key.replace(f"chat:{user_id}:", "")
             first_msg = await memory.client.lindex(key, 0)
             if first_msg:
                 msg = json.loads(first_msg)
@@ -222,6 +223,8 @@ async def list_sessions(
                 })
     else:
         for session_id, messages in memory._fallback_messages.items():
+            if not session_id.startswith(user_id):
+                continue
             if messages:
                 sessions.append({
                     "session_id": session_id,

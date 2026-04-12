@@ -101,10 +101,25 @@ export function useChat() {
         }
       };
 
-      eventSource.onerror = () => {
+      eventSource.onerror = (e) => {
         setIsStreaming(false);
         setActiveStep(null);
         eventSource.close();
+        // Surface the error to the user if no answer was received
+        if (!fullAnswer) {
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                content: "⚠️ Connection lost. This may be due to an authentication issue or server error. Please try again.",
+                isStreaming: false,
+              };
+            }
+            return updated;
+          });
+        }
       };
     } catch (err) {
       setIsStreaming(false);

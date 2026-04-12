@@ -48,6 +48,8 @@ class TaxRetrieverAgent:
             namespace="global-tax-knowledge",
             top_k=top_k,
             filter_dict=filter_dict,
+            bm25_weight=bm25_weight,
+            dense_weight=dense_weight,
         )
 
         # Retrieve from user's personal namespace
@@ -56,6 +58,8 @@ class TaxRetrieverAgent:
             namespace=f"user_{user_id}",
             top_k=top_k,
             filter_dict=filter_dict,
+            bm25_weight=bm25_weight,
+            dense_weight=dense_weight,
         )
 
         # Merge and deduplicate — keep highest-scoring version of each chunk

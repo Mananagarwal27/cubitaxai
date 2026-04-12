@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from redis.asyncio import Redis
@@ -47,7 +47,7 @@ class RedisMemoryManager:
             "role": role,
             "content": content,
             "citations": citations,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
         if self.client:
             await self.client.rpush(f"chat:{session_id}", json.dumps(payload))

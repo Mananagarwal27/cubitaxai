@@ -14,13 +14,12 @@ class Settings(BaseSettings):
 
     # ── App ──────────────────────────────────────────────
     APP_NAME: str = "CubitaxAI"
+    APP_VERSION: str = "2.0.0"
     APP_ENV: Literal["development", "staging", "production"] = "development"
     DEBUG: bool = False
     SECRET_KEY: str                          
     UPLOAD_DIR: str = "/app/uploads"
     MAX_UPLOAD_SIZE_MB: int = 50
-    app_name: str = "CubitaxAI"
-    app_version: str = "2.0.0"
 
     # ── Database ─────────────────────────────────────────
     DATABASE_URL: str                        
@@ -102,6 +101,10 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    # ── ChromaDB ─────────────────────────────────────────
+    CHROMA_HOST: str = "chromadb"
+    CHROMA_PORT: int = 8000
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
@@ -121,35 +124,111 @@ class Settings(BaseSettings):
         if not v.startswith("postgresql+asyncpg://"):
             raise ValueError("DATABASE_URL must use postgresql+asyncpg:// scheme")
         return v
-    
+
+    # ── Lowercase property accessors ─────────────────────
+    # These are used throughout the codebase for cleaner access.
+
     @property
     def async_database_url(self) -> str:
         """Return an async SQLAlchemy URL for the configured database."""
         return self.DATABASE_URL
-    
+
     @property
     def redis_url(self) -> str:
         return self.REDIS_URL
+
+    @property
+    def celery_broker_url(self) -> str:
+        return self.CELERY_BROKER_URL
+
+    @property
+    def celery_result_backend(self) -> str:
+        return self.CELERY_RESULT_BACKEND
+
     @property
     def secret_key(self) -> str:
         return self.SECRET_KEY
+
     @property
     def algorithm(self) -> str:
         return self.ALGORITHM
+
     @property
     def access_token_expire_minutes(self) -> int:
         return self.ACCESS_TOKEN_EXPIRE_MINUTES
+
     @property
     def allowed_origins(self) -> List[str]:
         return self.CORS_ORIGINS
+
     @property
     def debug(self) -> bool:
         return self.DEBUG
+
     @property
     def upload_dir(self) -> Path:
         return Path(self.UPLOAD_DIR)
+
     @property
     def reports_dir(self) -> Path:
         return Path("generated_reports")
+
+    @property
+    def app_name(self) -> str:
+        return self.APP_NAME
+
+    @property
+    def app_version(self) -> str:
+        return self.APP_VERSION
+
+    # ── External service key accessors ───────────────────
+
+    @property
+    def openai_api_key(self) -> str:
+        return self.OPENAI_API_KEY
+
+    @property
+    def openai_model(self) -> str:
+        return self.OPENAI_MODEL
+
+    @property
+    def openai_embedding_model(self) -> str:
+        return self.OPENAI_EMBEDDING_MODEL
+
+    @property
+    def pinecone_api_key(self) -> str:
+        return self.PINECONE_API_KEY
+
+    @property
+    def pinecone_index(self) -> str:
+        return self.PINECONE_INDEX_NAME
+
+    @property
+    def pinecone_environment(self) -> str:
+        return self.PINECONE_ENVIRONMENT
+
+    @property
+    def cohere_api_key(self) -> str:
+        return self.COHERE_API_KEY
+
+    @property
+    def neo4j_uri(self) -> str:
+        return self.NEO4J_URI
+
+    @property
+    def neo4j_user(self) -> str:
+        return self.NEO4J_USER
+
+    @property
+    def neo4j_password(self) -> str:
+        return self.NEO4J_PASSWORD
+
+    @property
+    def chroma_host(self) -> str:
+        return self.CHROMA_HOST
+
+    @property
+    def chroma_port(self) -> int:
+        return self.CHROMA_PORT
 
 settings = Settings()

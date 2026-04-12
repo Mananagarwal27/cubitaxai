@@ -174,6 +174,22 @@ def create_app() -> FastAPI:
         else:
             components.append(ComponentHealth(name="pinecone", status="degraded", message="Using local fallback"))
 
+        # ChromaDB
+        if vs._chroma_client:
+            try:
+                vs._chroma_client.heartbeat()
+                components.append(ComponentHealth(name="chromadb", status="healthy"))
+            except Exception as exc:
+                components.append(ComponentHealth(name="chromadb", status="down", message=str(exc)[:100]))
+        else:
+            components.append(ComponentHealth(name="chromadb", status="degraded", message="Not configured"))
+
+        # Cohere Reranker
+        if vs._cohere_client:
+            components.append(ComponentHealth(name="cohere_reranker", status="healthy"))
+        else:
+            components.append(ComponentHealth(name="cohere_reranker", status="degraded", message="Using lexical fallback"))
+
         # Neo4j
         try:
             from app.services.knowledge_graph import KnowledgeGraphService

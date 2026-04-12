@@ -2,13 +2,87 @@ import aiosmtplib
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_
 from email.message import EmailMessage
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import httpx
 from typing import List, Tuple
 from app.config import settings
 from app.models.deadline import DeadlineCalendar, FilingStatus, AlertLog, FilingStatusEnum, AlertChannel, AlertStatus
+from app.models.schemas import DeadlineItem
+
+# ── Statutory deadline schedule (month, day, filing_name, section_ref) ──
+_STATUTORY_DEADLINES: list[tuple[int, int, str, str]] = [
+    (1, 7, "TDS Payment (Dec)", "Sec 194"),
+    (1, 15, "Advance Tax Q3", "Sec 208"),
+    (1, 31, "GSTR-3B (Dec)", "Sec 39"),
+    (2, 7, "TDS Payment (Jan)", "Sec 194"),
+    (3, 7, "TDS Payment (Feb)", "Sec 194"),
+    (3, 15, "Advance Tax Q4", "Sec 208"),
+    (3, 31, "GSTR-9 Annual Return", "Sec 44"),
+    (4, 7, "TDS Payment (Mar)", "Sec 194"),
+    (4, 30, "TDS Return Q4 (24Q/26Q)", "Sec 200"),
+    (5, 31, "TDS Certificate (16A)", "Sec 203"),
+    (6, 15, "Advance Tax Q1", "Sec 208"),
+    (7, 7, "TDS Payment (Jun)", "Sec 194"),
+    (7, 31, "TDS Return Q1 (24Q/26Q)", "Sec 200"),
+    (7, 31, "ITR Filing (Non-audit)", "Sec 139"),
+    (8, 7, "TDS Payment (Jul)", "Sec 194"),
+    (9, 7, "TDS Payment (Aug)", "Sec 194"),
+    (9, 15, "Advance Tax Q2", "Sec 208"),
+    (9, 30, "GSTR-3B (Aug)", "Sec 39"),
+    (10, 7, "TDS Payment (Sep)", "Sec 194"),
+    (10, 31, "ITR Filing (Audit cases)", "Sec 139"),
+    (10, 31, "TDS Return Q2 (24Q/26Q)", "Sec 200"),
+    (11, 7, "TDS Payment (Oct)", "Sec 194"),
+    (12, 7, "TDS Payment (Nov)", "Sec 194"),
+]
+
 
 class DeadlineService:
+
+    def get_current_deadlines(self) -> list[DeadlineItem]:
+        """Return upcoming statutory compliance deadlines as DeadlineItem objects.
+
+        This provides a deterministic list of Indian tax filing deadlines
+        based on the current date. Used by the ComplianceCheckerAgent for
+        dashboard display and orchestrator compliance nodes.
+        """
+        today = date.today()
+        current_year = today.year
+        items: list[DeadlineItem] = []
+
+        for month, day, filing_name, section_ref in _STATUTORY_DEADLINES:
+            # Check current year and next year to capture upcoming deadlines
+            for year in (current_year, current_year + 1):
+                try:
+                    due = date(year, month, day)
+                except ValueError:
+                    continue
+                days_remaining = (due - today).days
+                if -30 <= days_remaining <= 180:
+                    if days_remaining < 0:
+                        urgency = "RED"
+                        status = "Overdue"
+                    elif days_remaining <= 7:
+                        urgency = "RED"
+                        status = "Due Soon"
+                    elif days_remaining <= 30:
+                        urgency = "AMBER"
+                        status = "Upcoming"
+                    else:
+                        urgency = "GREEN"
+                        status = "Scheduled"
+
+                    items.append(DeadlineItem(
+                        filing_name=filing_name,
+                        due_date=datetime(year, month, day),
+                        days_remaining=days_remaining,
+                        urgency=urgency,
+                        status=status,
+                        section_ref=section_ref,
+                    ))
+
+        items.sort(key=lambda x: x.due_date)
+        return items
 
     async def get_upcoming_deadlines(self, db: AsyncSession, org_id: str, days_ahead: int = 30) -> list:
         end_date = datetime.utcnow().date() + timedelta(days=days_ahead)
